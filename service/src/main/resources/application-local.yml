@@ -1,0 +1,24 @@
+spring:
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://userapipostgres:5432/userapipostgres?stringtype=unspecified
+    username: root
+    password: root
+  liquibase:
+    enabled: true
+    change-log: classpath:db/liquibase-changelog.xml
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://userapipostgres:5432/userapipostgres?stringtype=unspecified
+    user: root
+    password: root
+  jpa:
+    hibernate:
+      ddl-auto: none
+    database-platform: org.hibernate.dialect.PostgreSQL9Dialect
+management:
+  endpoints:
+    web:
+      cors:
+        allowed-origins: http://localhost:4200, http://localhost:4201
+        allow-credentials: true

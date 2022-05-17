@@ -1,0 +1,21 @@
+plugins {
+    id "java-library"
+    id 'checkstyle'
+    id 'jacoco'
+}
+
+sourceCompatibility = JavaVersion.VERSION_11
+targetCompatibility = JavaVersion.VERSION_11
+
+apply from: "$rootDir/gradle/openapi-tools/client.gradle"
+apply from: "${rootDir}/gradle/code-quality.gradle"
+
+configurations {
+    compileOnly.extendsFrom annotationPocessor
+}
+
+dependencies {
+    annotationProcessor 'org.projectlombok:lombok:1.18.22'
+
+    compileOnly 'com.google.code.findbugs:annotations:3.0.1'
+}

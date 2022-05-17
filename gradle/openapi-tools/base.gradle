@@ -1,0 +1,18 @@
+apply plugin: 'org.openapi.generator'
+
+repositories {
+    mavenCentral()
+}
+
+openApiGenerate {
+    inputSpec = "$rootDir/swagger.yaml"
+    invokerPackage = "${group}.${name}"
+    modelPackage = "${group}.${name}.generated.models"
+    apiPackage = "${group}.${name}.generated.controllers"
+}
+
+compileJava.dependsOn 'openApiGenerate'
+
+sourceSets.main {
+    java { srcDirs += "${buildDir}/generate-resources/main/src/main/java" }
+}

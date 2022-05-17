@@ -1,0 +1,13 @@
+plugins {
+    id 'org.openapi.generator' version '5.3.0' apply false
+    id 'com.google.cloud.tools.jib' version '3.1.4' apply false
+}
+
+allprojects {
+    group = 'io.nuvalence.user.management.api'
+    version = '0.0.1-SNAPSHOT'
+
+    repositories {
+        mavenCentral()
+    }
+}

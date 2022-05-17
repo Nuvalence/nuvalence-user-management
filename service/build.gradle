@@ -1,0 +1,68 @@
+plugins {
+	id 'org.springframework.boot' version '2.5.7'
+	id 'io.spring.dependency-management' version '1.0.0.RELEASE'
+	id 'java'
+	id 'com.google.cloud.tools.jib'
+	id 'checkstyle'
+	id 'jacoco'
+	id 'com.avast.gradle.docker-compose' version '0.14.0'
+}
+
+sourceCompatibility = JavaVersion.VERSION_11
+targetCompatibility = JavaVersion.VERSION_11
+
+apply from: "${rootDir}/gradle/openapi-tools/server.gradle"
+apply from: "${rootDir}/gradle/code-quality.gradle"
+
+def mapstructVersion = '1.4.2.Final'
+
+configurations {
+	compileOnly.extendsFrom annotationProcessor
+}
+
+dependencies {
+	// Boiler plate dependencies:
+	annotationProcessor 'org.projectlombok:lombok'
+	annotationProcessor "org.mapstruct:mapstruct-processor:1.4.2.Final"
+	compileOnly 'com.google.code.findbugs:annotations:3.0.1'
+	compileOnly 'org.springframework.boot:spring-boot-devtools'
+	implementation "org.mapstruct:mapstruct:${mapstructVersion}"
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+	// Database management
+	runtimeOnly 'com.google.cloud.sql:postgres-socket-factory:1.5.0'
+	runtimeOnly 'org.postgresql:postgresql'
+	runtimeOnly 'com.h2database:h2:2.1.210'
+	implementation 'org.liquibase:liquibase-core'
+
+	// Testing
+	implementation 'org.avaje.composite:junit:5.1'
+	implementation 'org.mockito:junit-jupiter:2.20.0'
+	implementation 'org.mockito:mockito-core:4.3.1'
+}
+
+// dockerCompose plugin: https://github.com/avast/gradle-docker-compose-plugin
+dockerCompose {
+	projectName = rootProject.name
+	dockerComposeWorkingDirectory = project.file(project.getRootDir().toString())
+	tcpPortsToIgnoreWhenWaiting = [5439]
+}
+
+test {
+	useJUnitPlatform()
+}
+
+tasks.withType(JavaCompile) {
+	options.compilerArgs = [
+			'-Amapstruct.suppressGeneratorTimestamp=true'
+	]
+}
+
+bootRun {
+	systemProperties = System.properties
+	systemProperty 'spring.profiles.active', findProperty('profile') ?: 'local'
+}

@@ -1,0 +1,34 @@
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/user
+    user: username
+    password: password
+  liquibase:
+    enabled: true
+    change-log: classpath:db/liquibase-changelog.xml
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/user
+    user: username
+    password: password
+  jackson:
+    serialization:
+      write-dates-with-zone-id: true
+      write-dates-as-timestamps: false
+    deserialization:
+      adjust_dates_to_context_time-zone: false
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: none
+
+cerbos:
+  baseUrl: "https://cerbos-url.com"
+  username: "cerbosUser"
+  password: "cerbosPassword"
+management:
+  endpoints:
+    web:
+      cors:
+        allowed-origins: http://localhost:4200, http://localhost:4201
+        allow-credentials: true

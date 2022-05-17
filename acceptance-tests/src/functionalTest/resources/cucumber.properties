@@ -1,0 +1,1 @@
+cucumber.junit-platform.naming-strategy=long
