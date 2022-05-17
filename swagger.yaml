@@ -1,0 +1,596 @@
+swagger: "2.0"
+info:
+  description: "This is a user role management API"
+  version: "1.0.0"
+  title: "Nuvalence User Management API"
+basePath: "/api/v2"
+tags:
+  - name: "user"
+    description: "Controller that manages users"
+# - name: "role"
+#   description: "Controller that manages roles"
+schemes:
+  - "https"
+  - "http"
+paths:
+  /user/{id}:
+    get:
+      tags:
+        - "user"
+      summary: "Get user by user by id"
+      operationId: "getUserById"
+      parameters:
+        - name: "id"
+          in: "path"
+          description: "Name of the user to retrieve "
+          required: true
+          type: "string"
+          format: uuid
+        - name: "resource"
+          in: "query"
+          description: "Name of the resource "
+          required: false
+          type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/UserDTO"
+        "401":
+          description: "You are unauthorized to make this request"
+        "404":
+          description: "User not found"
+    delete:
+      tags:
+        - "user"
+      summary: "Delete user by user Id"
+      operationId: "deleteUserById"
+      parameters:
+        - name: "id"
+          in: "path"
+          description: "id of the user to delete "
+          required: true
+          type: "string"
+          format: uuid
+      responses:
+        "200":
+          description: "successful operation"
+        "401":
+          description: "You are unauthorized to make this request"
+        "404":
+          description: "User not found"
+  /user/email/{email}:
+    get:
+      tags:
+        - "user"
+      summary: "Get user by user by email"
+      operationId: "getUserByEmail"
+      parameters:
+        - name: "email"
+          in: "path"
+          description: "Email of the user to retrieve"
+          required: true
+          type: "string"
+        - name: "resource"
+          in: "query"
+          description: "Name of the resource "
+          required: false
+          type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/UserDTO"
+        "401":
+          description: "You are unauthorized to make this request"
+        "404":
+          description: "User not found"
+  /user/adjust-roles:
+    post:
+      tags:
+        - "user"
+      summary: "Add a role to user"
+      operationId: "assignRoleToUser"
+      parameters:
+        - name: userRole
+          in: body
+          description: "user object"
+          required: true
+          schema:
+            $ref: "#/definitions/UserRoleDTO"
+      responses:
+        "201":
+          description: "successful operation"
+        "400":
+          description: "Invalid request body"
+        "401":
+          description: "You are unauthorized to make this request"
+        "404":
+          description: "Resource not found"
+    delete:
+      tags:
+        - "user"
+      summary: "Delete role from user"
+      operationId: "Remove role from user"
+      parameters:
+        - name: userRole
+          in: body
+          description: "user object"
+          required: true
+          schema:
+            $ref: "#/definitions/UserRoleDTO"
+      responses:
+        "200":
+          description: "successful operation"
+        "401":
+          description: "You are unauthorized to make this request"
+        "404":
+          description: "Resource not found"
+  /user/{id}/all-roles:
+    get:
+      tags:
+        - "user"
+      summary: "Get all roles by user id"
+      operationId: "getUserRolesById"
+      parameters:
+        - name: "id"
+          in: "path"
+          description: "id of the user to retrieve roles for "
+          required: true
+          type: "string"
+          format: uuid
+        - name: "resource"
+          in: "query"
+          description: "Name of the resource "
+          required: false
+          type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/AllRoles"
+        "401":
+          description: "You are unauthorized to make this request"
+        "404":
+          description: "User not found"
+  /user/{id}/preferences:
+    get:
+      tags:
+        - "user"
+      summary: "Get preferences by user id"
+      operationId: "getPreferencesById"
+      parameters:
+        - name: "id"
+          in: "path"
+          description: "ID of the user to retrieve preferences for"
+          required: true
+          type: "string"
+          format: uuid
+      responses:
+        "200":
+          description: "Successful operation"
+          schema:
+            $ref: "#/definitions/UserPreferenceDTO"
+        "401":
+          description: "You are unauthorized to make this request"
+        "404":
+          description: "User not found"
+    put:
+      tags:
+        - "user"
+      summary: "Update preferences for a user with ID"
+      operationId: "updatePreferences"
+      parameters:
+        - name: "id"
+          in: "path"
+          description: "ID of the user whose preferences are being updated"
+          required: true
+          type: "string"
+          format: uuid
+        - name: userPreferences
+          in: body
+          description: "Preferences object"
+          required: true
+          schema:
+            $ref: "#/definitions/UserPreferenceDTO"
+      responses:
+        "200":
+          description: "Successful operation"
+        "401":
+          description: "You are unauthorized to make this request"
+        "404":
+          description: "User not found"
+  /user/{id}/preferences/{app_id}:
+    get:
+      tags:
+        - "user"
+      summary: "Get supported preferences for an application by user id"
+      operationId: "getSupportedPreferencesById"
+      parameters:
+        - name: "id"
+          in: "path"
+          description: "ID of the user to retrieve preferences for"
+          required: true
+          type: "string"
+          format: uuid
+        - name: "app_id"
+          in: "path"
+          description: "ID of the application to retrieve preferences for"
+          required: true
+          type: "string"
+          format: uuid
+      responses:
+        "200":
+          description: "Successful operation"
+          schema:
+            $ref: "#/definitions/UserPreferenceDTO"
+        "401":
+          description: "You are unauthorized to make this request"
+        "404":
+          description: "User or application not found"
+    put:
+      tags:
+        - "user"
+      summary: "Set preferences for a given application."
+      operationId: "updateApplicationPreferences"
+      parameters:
+        - name: "id"
+          in: "path"
+          description: "ID of the user to retrieve preferences for"
+          required: true
+          type: "string"
+          format: uuid
+        - name: "app_id"
+          in: "path"
+          description: "ID of the application to retrieve preferences for"
+          required: true
+          type: "string"
+          format: uuid
+        - name: userPreferences
+          in: body
+          description: "Application preferences object"
+          required: true
+          schema:
+            $ref: "#/definitions/ApplicationPreferenceDTO"
+      responses:
+        "200":
+          description: "Successful operation"
+        "401":
+          description: "You are unauthorized to make this request"
+        "404":
+          description: "User or application not found"
+  /user:
+    get:
+      tags:
+        - "user"
+      summary: "Get all users"
+      operationId: "getUserList"
+      parameters:
+        - name: "resource"
+          in: "query"
+          description: "Name of the resource "
+          required: false
+          type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/AllUsers"
+        "401":
+          description: "You are unauthorized to make this request"
+        "404":
+          description: "User not found"
+    post:
+      tags:
+        - "user"
+      summary: "Create a user"
+      operationId: "addUser"
+      parameters:
+        - name: body
+          in: body
+          description: "user object"
+          required: true
+          schema:
+            $ref: "#/definitions/UserCreationRequest"
+      responses:
+        "201":
+          description: "successful operation"
+        "400":
+          description: "Invalid request body"
+        "401":
+          description: "You are unauthorized to make this request"
+        "404":
+          description: "User not found"
+  /role:
+    post:
+      tags:
+        - "role"
+      summary: "Create a role"
+      operationId: "addRole"
+      parameters:
+        - name: body
+          in: body
+          description: " role object"
+          required: true
+          schema:
+            $ref: "#/definitions/RoleDTO"
+      responses:
+        "201":
+          description: "successful operation"
+        "400":
+          description: "Invalid request body"
+        "401":
+          description: "You are unauthorized to make this request"
+        "404":
+          description: "Role not found"
+    get:
+      tags:
+        - "role"
+      summary: "Get all roles"
+      operationId: "getAllRoles"
+      parameters:
+        - name: "resource"
+          in: "query"
+          description: "Name of the resource "
+          required: false
+          type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/AllRoles"
+        "401":
+          description: "You are unauthorized to make this request"
+
+  /role/{id}:
+    delete:
+      tags:
+        - "role"
+      summary: "Delete role by id"
+      operationId: "deleteRoleById"
+      parameters:
+        - name: "id"
+          in: "path"
+          description: "Id of role to delete "
+          required: true
+          type: "string"
+          format: uuid
+        - name: "resource"
+          in: "query"
+          description: "Name of the resource "
+          required: false
+          type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+        "401":
+          description: "You are unauthorized to make this request"
+        "404":
+          description: "User not found"
+    get:
+      tags:
+        - "role"
+      summary: "get all users by role"
+      operationId: "getUsersByRole"
+      parameters:
+        - name: "id"
+          in: "path"
+          description: "Id of role to retrieve users for "
+          required: true
+          type: "string"
+          format: uuid
+        - name: "resource"
+          in: "query"
+          description: "Name of the resource "
+          required: false
+          type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            $ref: '#/definitions/AllUsers'
+        "401":
+          description: "You are unauthorized to make this request"
+        "404":
+          description: "User not found"
+    post:
+      tags:
+        - "role"
+      summary: "updates a role"
+      operationId: "updateRole"
+      parameters:
+        - name: "id"
+          in: "path"
+          description: "Id of role to update"
+          required: true
+          type: "string"
+          format: uuid
+        - name: "resource"
+          in: "query"
+          description: "Name of the resource "
+          required: false
+          type: "string"
+        - name: body
+          in: body
+          description: "role object"
+          required: true
+          schema:
+            $ref: "#/definitions/RoleDTO"
+      responses:
+        "201":
+          description: "successful operation"
+        "401":
+          description: "You are unauthorized to make this request"
+        "404":
+          description: "Role not found"
+  /languages/{id}:
+    get:
+      tags:
+        - "language"
+      summary: "Return all supported languages for a given application."
+      operationId: "getSupportedLanguages"
+      parameters:
+        - name: "id"
+          in: path
+          description: "ID for the application to find supported languages of."
+          type: "string"
+          required: true
+          format: uuid
+      responses:
+        "200":
+          description: "Successful operation"
+          schema:
+            type: array
+            example: [ { id: "1234", languageName: "English", languageStandardId: "en" } ]
+            items:
+              $ref: "#/definitions/LanguageDTO"
+
+  /validate/user-permission:
+    get:
+      tags:
+        - "validate"
+      summary: "Validate that the user has the provided permission"
+      operationId: "validateUserPermission"
+      parameters:
+        - name: "userName"
+          in: query
+          description: "userName of the user to validate"
+          required: true
+          type: "string"
+        - name: "permission"
+          in: query
+          description: "permission of the user to validate"
+          required: true
+          type: "string"
+        - name: "resource"
+          in: query
+          description: "policy resource of the permission to validate"
+          required: true
+          type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            $ref: '#/definitions/ValidatePermissionDTO'
+        "401":
+          description: "You are not authorized to make this request"
+
+definitions:
+  AllRoles:
+    type: array
+    items:
+      $ref: '#/definitions/RoleDTO'
+    example:
+      - id: 1
+        roleName: Regional Manager
+      - id: 2
+        roleName: Assistant to the Regional Manager
+  AllUsers:
+    type: array
+    items:
+      $ref: '#/definitions/UserDTO'
+  UserDTO:
+    type: object
+    required:
+      - email
+      - id
+      - displayName
+    properties:
+      id:
+        type: string
+        format: uuid
+      displayName:
+        type: string
+      email:
+        type: string
+      externalId:
+        type: string
+      assignedRoles:
+        type: array
+        items:
+          $ref: '#/definitions/RoleDTO'
+      preferences:
+        type: object
+        $ref: '#/definitions/UserPreferenceDTO'
+  RoleDTO:
+    type: object
+    required:
+      - roleName
+    properties:
+      id:
+        type: string
+        format: uuid
+      roleName:
+        type: string
+      permissions:
+        type: array
+        items:
+          type: string
+  UserRoleDTO:
+    type: object
+    required:
+      - userId
+      - roleId
+    properties:
+      userId:
+        type: string
+        format: uuid
+      roleId:
+        type: string
+        format: uuid
+  UserPreferenceDTO:
+    type: object
+    required:
+      - language
+      - communicationPreference
+    properties:
+      id:
+        type: string
+        format: uuid
+      language:
+        $ref: '#/definitions/LanguageDTO'
+      communicationPreference:
+        type: string
+  ApplicationPreferenceDTO:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+      language:
+        $ref: '#/definitions/LanguageDTO'
+  UserCreationRequest:
+    type: object
+    required:
+      - email
+      - displayName
+    properties:
+      displayName:
+        type: string
+      email:
+        type: string
+      externalId:
+        type: string
+      initialRoles:
+        type: array
+        items:
+          $ref: '#/definitions/RoleDTO'
+  ValidatePermissionDTO:
+    type: object
+    required:
+      - allow
+    properties:
+      allow:
+        type: boolean
+  LanguageDTO:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+      languageName:
+        type: string
+        example: "English"
+      languageStandardId:
+        type: string
+        example: "en"

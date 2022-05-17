@@ -1,0 +1,70 @@
+import java.text.SimpleDateFormat
+
+plugins {
+    id 'java'
+    id 'checkstyle'
+    id 'jacoco'
+}
+
+sourceCompatibility = JavaVersion.VERSION_11
+targetCompatibility = JavaVersion.VERSION_11
+
+apply from: "${rootDir}/gradle/code-quality.gradle"
+
+def cucumberVersion = '6.10.4'
+def junitVersion = '5.7.2'
+
+
+configurations {
+    functionalTestImplementation
+    functionalTestCompileOnly.extendsFrom functionalTestAnnotationProcessor
+}
+
+dependencies {
+    functionalTestAnnotationProcessor 'org.projectlombok:lombok:1.18.22'
+
+    functionalTestCompileOnly 'com.google.code.findbugs:annotations:3.0.1'
+
+    functionalTestImplementation project(":client")
+
+    functionalTestImplementation "io.cucumber:cucumber-java:${cucumberVersion}"
+    functionalTestImplementation "io.cucumber:cucumber-junit-platform-engine:${cucumberVersion}"
+    functionalTestImplementation "io.cucumber:cucumber-picocontainer:${cucumberVersion}"
+
+    functionalTestImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
+    functionalTestImplementation "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+
+    functionalTestImplementation 'org.hamcrest:hamcrest-junit:2.0.0.0'
+
+    functionalTestImplementation 'org.awaitility:awaitility:3.0.0'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+sourceSets {
+    functionalTest {
+        java {}
+    }
+}
+
+SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+
+task functionalTest(type: Test) {
+    doFirst {
+        println "starting functional tests at: " + sdf.format(new Date())
+    }
+    description = 'Runs the functional tests.'
+    group = 'verification'
+    testClassesDirs = sourceSets.functionalTest.output.classesDirs
+    classpath = sourceSets.functionalTest.runtimeClasspath
+    outputs.upToDateWhen { false }
+    useJUnitPlatform()
+    if (project.hasProperty("baseUri")) {
+        environment 'SERVICE_URI', "${baseUri}"
+    }
+    doLast {
+        println "completing functional tests at: " + sdf.format(new Date())
+    }
+}

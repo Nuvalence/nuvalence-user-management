@@ -1,0 +1,49 @@
+checkstyle {
+    toolVersion '8.25'
+}
+
+checkstyleMain {
+    source =  'src'
+}
+
+test.finalizedBy jacocoTestReport
+jacocoTestReport.dependsOn test
+
+
+test {
+    jacoco {
+        excludes += '**/generated/**'
+        excludes += '**/RFC3339DateFormat*'
+        excludes += '**/OpenAPI2SpringBoot*'
+        excludes += '**/config/exception/**'
+        excludes += '**/entity/**'
+    }
+}
+
+jacocoTestReport {
+    dependsOn test // tests are required to run before generating the report
+
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: test.jacoco.excludes)
+        }))
+    }
+}
+
+jacocoTestCoverageVerification {
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: test.jacoco.excludes)
+        }))
+    }
+
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.87
+            }
+        }
+    }
+}
+
+check.dependsOn jacocoTestCoverageVerification
