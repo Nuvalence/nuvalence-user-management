@@ -11,6 +11,7 @@ services:
       - POSTGRES_USER=root
       - POSTGRES_PASSWORD=root
       - PGPORT=5439
+      - PGDATABASE=userapipostgres
     healthcheck:
       test: ["CMD-SHELL", "pg_isready"]
       interval: 10s
