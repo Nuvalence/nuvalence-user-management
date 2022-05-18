@@ -1,6 +1,6 @@
 # Nuvalence User Management API build and run:
 
-## Build:
+## Build/Run Locally:
 ```./gradlew clean build composeUp```
 
 You can view the state of the database afterwards by going to the local instance of [pgAdmin](http://localhost:5050) with the following credentials:
@@ -18,6 +18,8 @@ Then, register a server with the following details:
 
 NOTE: These details are also in the [docker-compose.yml](./docker-compose.yml) file.
 
+[view docs](http://localhost:8080/swagger-ui.html)
+
 The app can be brought down via:
 
 ```./gradlew composeDown```
@@ -27,11 +29,6 @@ The app can be brought down via:
 
 ### Documentation
  - [tools and frameworks](./docs/tools.md)
-
-## Run Locally
-1. build: `./gradlew clean build jibDockerBuild`
-2. exec: `docker-compose up`
-3. [view docs](http://localhost:8080/swagger-ui.html)
 
 ## Cerbos
 The Nuvalence User Management has a dependency to a Cerbos instance with the Cerbos Admin API configured and running for updates to roles and permissions as well as validating permissions. You can view the Cerbos docs [here](https://docs.cerbos.dev/cerbos/latest/index.html).
