@@ -12,7 +12,7 @@ Then, register a server with the following details:
 
 - Name: **userapipostgres** (can be anything though)
 - Host name/address: **userapipostgres**
-- Port: **5432**
+- Port: **5439**
 - Username: **root**
 - Password: **root**
 
