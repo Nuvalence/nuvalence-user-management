@@ -2,14 +2,14 @@ spring:
 
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://userapipostgres:5432/userapipostgres?stringtype=unspecified
+    url: jdbc:postgresql://userapipostgres:5439/userapipostgres?stringtype=unspecified
     username: root
     password: root
   liquibase:
     enabled: true
     change-log: classpath:db/liquibase-changelog.xml
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://userapipostgres:5432/userapipostgres?stringtype=unspecified
+    url: jdbc:postgresql://userapipostgres:5439/userapipostgres?stringtype=unspecified
     user: root
     password: root
   jpa:
