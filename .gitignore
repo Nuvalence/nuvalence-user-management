@@ -51,3 +51,7 @@ replay_pid*
 .DS_Store
 acceptance-tests/bin/
 service/bin/
+
+
+# Ignore DevSpace cache and log folder
+.devspace/

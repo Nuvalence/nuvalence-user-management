@@ -39,7 +39,6 @@ services:
       - pgadmin-data:/var/lib/pgadmin
 
   userapi:
-    image: 'docker-spring-boot-postgres:latest'
     build:
       context: .
       dockerfile: userapi.Dockerfile

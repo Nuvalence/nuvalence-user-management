@@ -1,6 +1,6 @@
 swagger: "2.0"
 info:
-  description: "This is a user role management API"
+  description: "This is a User Role Management API"
   version: "1.0.0"
   title: "Nuvalence User Management API"
 basePath: "/api/v2"
