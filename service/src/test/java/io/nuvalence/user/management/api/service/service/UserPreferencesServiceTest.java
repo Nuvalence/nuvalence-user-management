@@ -2,13 +2,10 @@ package io.nuvalence.user.management.api.service.service;
 
 import io.nuvalence.user.management.api.service.config.exception.ResourceNotFoundException;
 import io.nuvalence.user.management.api.service.entity.ApplicationEntity;
-import io.nuvalence.user.management.api.service.entity.ApplicationPreferenceEntity;
 import io.nuvalence.user.management.api.service.entity.LanguageEntity;
 import io.nuvalence.user.management.api.service.entity.UserEntity;
 import io.nuvalence.user.management.api.service.entity.UserPreferenceEntity;
-import io.nuvalence.user.management.api.service.generated.models.ApplicationPreferenceDTO;
 import io.nuvalence.user.management.api.service.generated.models.UserPreferenceDTO;
-import io.nuvalence.user.management.api.service.mapper.LanguageEntityMapper;
 import io.nuvalence.user.management.api.service.mapper.UserPreferenceEntityMapper;
 import io.nuvalence.user.management.api.service.repository.ApplicationPreferencesRepository;
 import io.nuvalence.user.management.api.service.repository.ApplicationRepository;
@@ -49,9 +46,6 @@ public class UserPreferencesServiceTest {
 
     @Captor
     private ArgumentCaptor<UserPreferenceEntity> userPreferencesCaptor;
-
-    @Captor
-    private ArgumentCaptor<ApplicationPreferenceEntity> applicationPreferencesCaptor;
 
     @Test
     public void getPreferencesByUserId_validUserId() {
@@ -111,20 +105,8 @@ public class UserPreferencesServiceTest {
         when(userPreferencesRepository.findPreferencesByUserId(user.getId())).thenReturn(Optional.of(preferences));
         when(applicationRepository.getApplicationById(application.getId())).thenReturn(Optional.of(application));
 
-        ApplicationPreferenceEntity applicationPreferences = new ApplicationPreferenceEntity();
-        applicationPreferences.setId(UUID.randomUUID());
-        applicationPreferences.setApplication(application);
-        applicationPreferences.setUser(user);
-        applicationPreferences.setLanguage(backupLanguage);
-
-        when(applicationPreferencesRepository.findApplicationPreferenceByApplicationId(
-                user.getId(), application.getId()
-        )).thenReturn(Optional.of(applicationPreferences));
-
         UserPreferenceDTO expected = new UserPreferenceDTO()
-                .id(preferences.getId())
-                .communicationPreference("sms")
-                .language(LanguageEntityMapper.INSTANCE.languageEntityToLanguageDto(backupLanguage));
+                .id(preferences.getId());
 
         UserPreferenceEntity result = userPreferenceService.getSupportedPreferencesByUserId(
                 user.getId(), application.getId()
@@ -232,8 +214,6 @@ public class UserPreferencesServiceTest {
         language.setLanguageStandardId("en");
 
         UserPreferenceEntity updatedPreferences = new UserPreferenceEntity();
-        updatedPreferences.setCommunicationPreference("email");
-        updatedPreferences.setLanguage(language);
 
         UserPreferenceDTO updatedPreferencesDto = UserPreferenceEntityMapper
                 .INSTANCE
@@ -244,12 +224,11 @@ public class UserPreferencesServiceTest {
         verify(userPreferencesRepository).save(userPreferencesCaptor.capture());
 
         UserPreferenceEntity preferenceCaptured = userPreferencesCaptor.getValue();
-        assertEquals(preferenceCaptured.getCommunicationPreference(), updatedPreferences.getCommunicationPreference());
 
-        LanguageEntity resultLanguage = preferenceCaptured.getLanguage();
-        assertEquals(resultLanguage.getId(), language.getId());
-        assertEquals(resultLanguage.getLanguageName(), language.getLanguageName());
-        assertEquals(resultLanguage.getLanguageStandardId(), language.getLanguageStandardId());
+        //        LanguageEntity resultLanguage = preferenceCaptured.getLanguage();
+        //        assertEquals(resultLanguage.getId(), language.getId());
+        //        assertEquals(resultLanguage.getLanguageName(), language.getLanguageName());
+        //        assertEquals(resultLanguage.getLanguageStandardId(), language.getLanguageStandardId());
     }
 
     /**
@@ -292,73 +271,25 @@ public class UserPreferencesServiceTest {
 
         when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
         when(applicationRepository.getApplicationById(application.getId())).thenReturn(Optional.of(application));
-        when(userPreferencesRepository.findPreferencesByUserId(user.getId())).thenReturn(Optional.of(preferences));
+        when(userPreferencesRepository.findApplicationPreferencesByUserId(user.getId(), application.getId()))
+                .thenReturn(Optional.of(preferences));
 
-        ApplicationPreferenceDTO applicationPreferences = new ApplicationPreferenceDTO()
-                .language(LanguageEntityMapper.INSTANCE.languageEntityToLanguageDto(backupLanguage));
+        UserPreferenceDTO applicationPreferences = new UserPreferenceDTO();
 
         userPreferenceService.updateApplicationPreferencesById(
                 user.getId(), application.getId(), applicationPreferences
         );
 
-        verify(applicationPreferencesRepository).save(applicationPreferencesCaptor.capture());
+        verify(userPreferencesRepository).save(userPreferencesCaptor.capture());
 
-        ApplicationPreferenceEntity preferenceCaptured = applicationPreferencesCaptor.getValue();
-        assertEquals(application, preferenceCaptured.getApplication());
-        assertEquals(preferenceCaptured.getUser(), user);
+        UserPreferenceEntity preferenceCaptured = userPreferencesCaptor.getValue();
+        assertEquals(application.getId(), preferenceCaptured.getApplicationId());
+        assertEquals(preferenceCaptured.getUserId(), user.getId());
 
-        LanguageEntity resultLanguage = preferenceCaptured.getLanguage();
-        assertEquals(resultLanguage.getId(), backupLanguage.getId());
-        assertEquals(resultLanguage.getLanguageName(), backupLanguage.getLanguageName());
-        assertEquals(resultLanguage.getLanguageStandardId(), backupLanguage.getLanguageStandardId());
-    }
-
-    /**
-     * Tests if, given an invalid user, and error is thrown.
-     */
-    @Test
-    public void updateApplicationPreferences_invalidUserValidApplication() {
-        ApplicationEntity application = new ApplicationEntity();
-        application.setId(UUID.randomUUID());
-        application.setName("my-awesome-application");
-
-        UUID randomUuid = UUID.randomUUID();
-
-        when(userRepository.findById(randomUuid)).thenReturn(Optional.empty());
-        when(applicationRepository.getApplicationById(application.getId())).thenReturn(Optional.of(application));
-
-        Exception exception = assertThrows(ResourceNotFoundException.class, () -> {
-            userPreferenceService.updateApplicationPreferencesById(
-                    randomUuid,
-                    application.getId(), null);
-        });
-
-        assertTrue(exception.getMessage().contains("Cannot find user or application with given ID!"));
-    }
-
-    /**
-     * Tests if, given an invalid application, and error is thrown.
-     */
-    @Test
-    public void updateApplicationPreferences_validUserInvalidApplication() {
-        UserEntity user = new UserEntity();
-        user.setEmail("admin@website.com");
-        user.setId(UUID.fromString("ce90e648-c66c-11ec-871d-2aaa794f39fb"));
-        user.setDisplayName("Generic Admin");
-
-        UUID randomUuid = UUID.randomUUID();
-
-        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
-        when(applicationRepository.getApplicationById(randomUuid)).thenReturn(Optional.empty());
-
-        Exception exception = assertThrows(ResourceNotFoundException.class, () -> {
-            userPreferenceService.updateApplicationPreferencesById(
-                    user.getId(),
-                    randomUuid,
-                    null);
-        });
-
-        assertTrue(exception.getMessage().contains("Cannot find user or application with given ID!"));
+        //                LanguageEntity resultLanguage = preferenceCaptured.getLanguage();
+        //                assertEquals(resultLanguage.getId(), backupLanguage.getId());
+        //                assertEquals(resultLanguage.getLanguageName(), backupLanguage.getLanguageName());
+        //                assertEquals(resultLanguage.getLanguageStandardId(), backupLanguage.getLanguageStandardId());
     }
 
     /**
@@ -373,8 +304,6 @@ public class UserPreferencesServiceTest {
 
         UserPreferenceEntity preference = new UserPreferenceEntity();
         preference.setId(UUID.randomUUID());
-        preference.setLanguage(language);
-        preference.setCommunicationPreference("sms");
 
         return preference;
     }

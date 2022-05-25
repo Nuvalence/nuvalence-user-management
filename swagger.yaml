@@ -258,7 +258,7 @@ paths:
           description: "Application preferences object"
           required: true
           schema:
-            $ref: "#/definitions/ApplicationPreferenceDTO"
+            $ref: "#/definitions/UserPreferenceDTO"
       responses:
         "200":
           description: "Successful operation"
@@ -949,17 +949,20 @@ definitions:
         format: uuid
   UserPreferenceDTO:
     type: object
-    required:
-      - language
-      - communicationPreference
     properties:
       id:
         type: string
         format: uuid
-      language:
-        $ref: '#/definitions/LanguageDTO'
-      communicationPreference:
+      userId:
         type: string
+        format: uuid
+      userPreferenceTypeId:
+        type: string
+        format: uuid
+      userPreferenceOptionId:
+        type: string
+        format: uuid
+      applicationId:        
   PermissionDTO:
     type: object
     required:
@@ -1008,14 +1011,6 @@ definitions:
         items:
           type: string
           format: uuid
-  ApplicationPreferenceDTO:
-    type: object
-    properties:
-      id:
-        type: string
-        format: uuid
-      language:
-        $ref: '#/definitions/LanguageDTO'
   UserCreationRequest:
     type: object
     required:
@@ -1066,6 +1061,30 @@ definitions:
       languageStandardId:
         type: string
         example: "en"
+      localName:
+        type: string
+        example: "English"
+  UserPreferenceTypeDTO:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+      name:
+        type: string
+        example: "language"
+  UserPreferenceOptionDTO:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+      value:
+        type: string
+        example: "text/sms"
+      userPreferenceTypeId:
+        type: string
+        format: uuid        
   CustomFieldOptionDTO:
     type: object
     properties:

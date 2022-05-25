@@ -40,11 +40,11 @@ public class LanguageApiDelegateImplTest {
     @WithMockUser
     public void getSupportedLanguages() throws Exception {
         List<LanguageEntity> languages = List.of(
-            createLanguage("4e6ba44a-5446-4be9-a4a2-1090a9cca41a", "English", "en"),
-            createLanguage("e00b33e9-00c7-4670-9518-e467f58bf6b6", "Spanish", "es"),
-            createLanguage("31177f51-67f9-46ba-b193-00664e33f896", "Chinese", "zh"),
-            createLanguage("3e0c9ad2-308d-4dc0-a33d-372cea213bcf", "Polish", "pl"),
-            createLanguage("e95b36db-1313-4890-add1-89d43ffd5af5", "Italian", "it"));
+            createLanguage("4e6ba44a-5446-4be9-a4a2-1090a9cca41a", "English", "en", "English"),
+            createLanguage("e00b33e9-00c7-4670-9518-e467f58bf6b6", "Spanish", "es", "Español"),
+            createLanguage("31177f51-67f9-46ba-b193-00664e33f896", "Chinese", "zh", "中文"),
+            createLanguage("3e0c9ad2-308d-4dc0-a33d-372cea213bcf", "Polish", "pl", "Polski"),
+            createLanguage("e95b36db-1313-4890-add1-89d43ffd5af5", "Italian", "it", "Italiano"));
 
         UUID id = UUID.fromString("551e4105-0a7e-40a0-a9b6-7dc3a504d561");
 
@@ -62,11 +62,12 @@ public class LanguageApiDelegateImplTest {
                         .value(mappedLanguages.get(0).getLanguageStandardId()));
     }
 
-    private LanguageEntity createLanguage(String id, String name, String languageCode) {
+    private LanguageEntity createLanguage(String id, String name, String languageCode, String localName) {
         LanguageEntity language = new LanguageEntity();
         language.setId(UUID.fromString(id));
         language.setLanguageName(name);
         language.setLanguageStandardId(languageCode);
+        language.setLocalName(localName);
         return language;
     }
 }

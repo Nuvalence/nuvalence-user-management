@@ -2,10 +2,8 @@ package io.nuvalence.user.management.api.service.service;
 
 import io.nuvalence.user.management.api.service.config.exception.ResourceNotFoundException;
 import io.nuvalence.user.management.api.service.entity.ApplicationEntity;
-import io.nuvalence.user.management.api.service.entity.ApplicationPreferenceEntity;
 import io.nuvalence.user.management.api.service.entity.UserEntity;
 import io.nuvalence.user.management.api.service.entity.UserPreferenceEntity;
-import io.nuvalence.user.management.api.service.generated.models.ApplicationPreferenceDTO;
 import io.nuvalence.user.management.api.service.generated.models.UserPreferenceDTO;
 import io.nuvalence.user.management.api.service.mapper.MapperUtils;
 import io.nuvalence.user.management.api.service.mapper.UserPreferenceEntityMapper;
@@ -54,7 +52,7 @@ public class UserPreferenceService {
             throw new ResourceNotFoundException("Application not found with given ID!");
         }
 
-        Optional<ApplicationPreferenceEntity> applicationPreferences = applicationPreferencesRepository
+        Optional<UserPreferenceEntity> applicationPreferences = applicationPreferencesRepository
                 .findApplicationPreferenceByApplicationId(userId, appId);
 
         // if there are no application-specific preferences, just send over the general preferences.
@@ -113,36 +111,37 @@ public class UserPreferenceService {
     }
 
     /**
-     * Replaces the user preferences for a specific application.
+     * For a given user and application, override their user preferences.
      * @param userId User ID.
      * @param appId Application ID.
-     * @param updatedPreferences Updated application preferences.
+     * @param updatedPreferences Updated preferences.
      */
-    public void updateApplicationPreferencesById(UUID userId, UUID appId,
-                                                                 ApplicationPreferenceDTO updatedPreferences) {
+    public void updateApplicationPreferencesById(UUID userId, UUID appId, UserPreferenceDTO updatedPreferences) {
         Optional<UserEntity> user = userRepository.findById(userId);
         Optional<ApplicationEntity> application = applicationRepository.getApplicationById(appId);
 
-        if (user.isEmpty() || application.isEmpty()) {
-            throw new ResourceNotFoundException("Cannot find user or application with given ID!");
+        if (user.isEmpty()) {
+            throw new ResourceNotFoundException("Cannot find user with given ID!");
         }
 
-        ApplicationPreferenceEntity preferences = UserPreferenceEntityMapper
-                .INSTANCE.applicationPreferencesDtoToEntity(updatedPreferences);
-
-        Optional<UserPreferenceEntity> userPreference = userPreferencesRepository.findPreferencesByUserId(userId);
-
-        if (userPreference.isEmpty()) {
-            throw new ResourceNotFoundException(
-                    "Cannot assign application preferences for user with no default user preferences."
-            );
+        if (application.isEmpty()) {
+            throw new ResourceNotFoundException("Cannot find application with given ID!");
         }
 
-        preferences.setUser(user.get());
-        preferences.setUserPreferenceId(userPreference.get());
-        preferences.setApplication(application.get());
+        Optional<UserPreferenceEntity> initialPreferences = userPreferencesRepository
+                .findApplicationPreferencesByUserId(user.get().getId(), application.get().getId());
 
-        applicationPreferencesRepository.save(preferences);
+        UserPreferenceEntity preferences = UserPreferenceEntityMapper
+                .INSTANCE
+                .userPreferencesDtoToEntity(updatedPreferences);
+
+        // if there are already preferences, keep the ID. Otherwise, generate a new one.
+        preferences.setId(initialPreferences.isEmpty() ? UUID.randomUUID() : initialPreferences.get().getId());
+
+        // associate the updated preferences with the user
+        preferences.setUserId(user.get().getId());
+        preferences.setApplicationId(application.get().getId());
+
+        userPreferencesRepository.save(preferences);
     }
-
 }

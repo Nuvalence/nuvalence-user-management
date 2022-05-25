@@ -16,16 +16,17 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
+
 /**
- * Represents the user preferences for a given application.
+ * Represents options associated with preference types.
  */
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "application_preference")
-public class ApplicationPreferenceEntity {
+@Table(name = "user_preference_option")
+public class UserPreferenceOptionEntity {
     @Id
     @GeneratedValue(generator = "uuid2")
     @GenericGenerator(name = "uuid2", strategy = "org.hibernate.id.UUIDGenerator")
@@ -33,19 +34,10 @@ public class ApplicationPreferenceEntity {
     @Column(name = "id", length = 36, insertable = false, updatable = false, nullable = false)
     public UUID id;
 
-    @ManyToOne
-    @JoinColumn(name = "user_preference_id")
-    UserPreferenceEntity userPreferenceId;
+    @Column(name = "option_value", nullable = false, unique = true)
+    public String value;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    UserEntity user;
-
-    @ManyToOne
-    @JoinColumn(name = "app_id", nullable = false)
-    ApplicationEntity application;
-
-    @ManyToOne
-    @JoinColumn(name = "lang_preference", nullable = true)
-    LanguageEntity language;
+    @JoinColumn(name = "user_preference_type_id", nullable = false)
+    public UserPreferenceEntity userPreferenceType;
 }

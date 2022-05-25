@@ -7,15 +7,11 @@ import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 
-import java.util.List;
 import java.util.UUID;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 /**
@@ -35,16 +31,15 @@ public class UserPreferenceEntity {
     @Column(name = "id", length = 36, insertable = false, updatable = false, nullable = false)
     private UUID id;
 
-    @Column(name = "communication_preference")
-    private String communicationPreference;
-
     @Column(name = "user_id")
     private UUID userId;
 
-    @ManyToOne
-    @JoinColumn(name = "language_preference")
-    private LanguageEntity language;
+    @Column(name = "user_preference_type_id", nullable = false)
+    private UUID userPreferenceTypeId;
 
-    @OneToMany(mappedBy = "userPreferenceId")
-    private List<ApplicationPreferenceEntity> applicationPreferences;
+    @Column(name = "user_preference_option_id", nullable = false)
+    private UUID userPreferenceOptionId;
+
+    @Column(name = "application_id")
+    private UUID applicationId;
 }

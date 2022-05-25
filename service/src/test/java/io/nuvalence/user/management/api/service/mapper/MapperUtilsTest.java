@@ -1,6 +1,5 @@
 package io.nuvalence.user.management.api.service.mapper;
 
-import io.nuvalence.user.management.api.service.entity.ApplicationPreferenceEntity;
 import io.nuvalence.user.management.api.service.entity.CustomFieldDataTypeEntity;
 import io.nuvalence.user.management.api.service.entity.CustomFieldEntity;
 import io.nuvalence.user.management.api.service.entity.CustomFieldOptionEntity;
@@ -62,18 +61,13 @@ public class MapperUtilsTest {
         backupLanguage.setLanguageStandardId("en");
 
         UserPreferenceEntity preference = new UserPreferenceEntity();
-        preference.setCommunicationPreference("sms");
-        preference.setLanguage(language);
         preference.setId(UUID.randomUUID());
 
-        ApplicationPreferenceEntity applicationPreferences = new ApplicationPreferenceEntity();
+        UserPreferenceEntity applicationPreferences = new UserPreferenceEntity();
         applicationPreferences.setId(UUID.randomUUID());
-        applicationPreferences.setLanguage(backupLanguage);
 
         UserPreferenceDTO expected = new UserPreferenceDTO()
-                .id(preference.getId())
-                .communicationPreference("sms")
-                .language(LanguageEntityMapper.INSTANCE.languageEntityToLanguageDto(backupLanguage));
+                .id(preference.getId());
 
         UserPreferenceDTO result = MapperUtils.overlapPreferences(preference, applicationPreferences);
 
@@ -92,19 +86,14 @@ public class MapperUtilsTest {
         language.setLanguageStandardId("el");
 
         UserPreferenceEntity preference = new UserPreferenceEntity();
-        preference.setCommunicationPreference("sms");
-        preference.setLanguage(language);
         preference.setId(UUID.randomUUID());
 
-        ApplicationPreferenceEntity applicationPreferences = new ApplicationPreferenceEntity();
+        UserPreferenceEntity applicationPreferences = new UserPreferenceEntity();
         applicationPreferences.setId(UUID.randomUUID());
-        applicationPreferences.setLanguage(null);
 
         // Ignore all null properties, default to those in the user preferences
         UserPreferenceDTO expected = new UserPreferenceDTO()
-                .id(preference.getId())
-                .communicationPreference("sms")
-                .language(LanguageEntityMapper.INSTANCE.languageEntityToLanguageDto(language));
+                .id(preference.getId());
 
         UserPreferenceDTO result = MapperUtils.overlapPreferences(preference, applicationPreferences);
 

@@ -5,7 +5,7 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
-    <changeSet id="Initial-tables-001" author="open-source-initial-author" >
+    <changeSet id="Initial-tables-002" author="open-source-initial-author-2" >
         <createTable tableName="user_table">
             <column name="id" type="uuid">
                 <constraints primaryKey="true"
@@ -57,7 +57,7 @@
                              primaryKeyName="pk_app_id"
                              nullable="false"/>
             </column>
-            <column name="app_name" type="varchar(255)">
+            <column name="name" type="varchar(255)">
                 <constraints nullable="false" unique="true"/>
             </column>
         </createTable>
@@ -67,11 +67,40 @@
                              primaryKeyName="pk_lang_id"
                              nullable="false"/>
             </column>
-            <column name="lang_name" type="varchar(255)">
+            <column name="name" type="varchar(255)">
                 <constraints nullable="false" unique="true"/>
             </column>
-            <column name="lang_standard_id" type="varchar(2)">
+            <column name="language_standard_id" type="varchar(17)">
                 <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="local_name" type="varchar(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+        <createTable tableName="user_preference_type">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true"
+                             primaryKeyName="pk_user_pref_type_id"
+                             nullable="false"/>
+            </column>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+        <createTable tableName="user_preference_option">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true"
+                             primaryKeyName="pk_user_pref_option_id"
+                             nullable="false"/>
+            </column>
+            <column name="option_value" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_preference_type_id" type="uuid">
+                <constraints foreignKeyName="fk_option_preference_type_id"
+                             references="user_preference_type(id)"
+                             nullable="false"
+                             unique="false"/>
             </column>
         </createTable>
         <createTable tableName="user_preference">
@@ -86,44 +115,23 @@
                              nullable="false"
                              unique="true"/>
             </column>
-            <column name="language_preference" type="uuid">
-                <constraints foreignKeyName="fk_user_language_id"
-                             references="language(id)"
-                             nullable="true"
-                             unique="false"/>
-            </column>
-            <column name="communication_preference" type="varchar(255)">
-                <constraints nullable="true" unique="false"/>
-            </column>
-        </createTable>
-        <createTable tableName="application_preference">
-            <column name="id" type="uuid">
-                <constraints primaryKey="true"
-                             primaryKeyName="pk_app_preference_id"
-                             nullable="false"/>
-            </column>
-            <column name="user_id" type="uuid">
-                <constraints foreignKeyName="fk_app_preference_user_id"
-                             references="user_preference(user_id)"
+            <column name="user_preference_type_id" type="uuid">
+                <constraints foreignKeyName="fk_preference_type_id"
+                             references="user_preference_type(id)"
                              nullable="false"
                              unique="false"/>
             </column>
-            <column name="app_id" type="uuid">
-                <constraints foreignKeyName="fk_app_id_to_preferences"
+            <column name="user_preference_option_id" type="uuid">
+                <constraints foreignKeyName="fk_preference_option_id"
+                             references="user_preference_option(id)"
+                             nullable="false"
+                             unique="false"/>
+            </column>
+            <column name="application_id" type="uuid">
+                <constraints foreignKeyName="fk_preference_application_id"
                              references="application(id)"
-                             nullable="false"
-                             unique="true"/>
-            </column>
-            <column name="lang_preference" type="uuid">
-                <constraints foreignKeyName="fk_lang_pref_id"
-                             references="language(id)"
                              nullable="true"
                              unique="false"/>
-            </column>
-            <column name="user_preference_id" type="uuid">
-                <constraints foreignKeyName="user_to_app_preferences_id"
-                             references="user_preference(id)"
-                             nullable="false"/>
             </column>
         </createTable>
         <createTable tableName="application_language">
@@ -151,23 +159,23 @@
                    ('fd71db5b-0109-4478-956b-1e2a4af28087', 'ROLE_2');
         </sql>
         <sql>
-            INSERT INTO language(id, lang_name, lang_standard_id)
-            VALUES ('c95afee7-2bc4-4c12-acdd-344b5432520e', 'English', 'en'),
-                   ('b4449fdb-2f08-4c56-9c43-f0da407787d8', 'Spanish', 'es'),
-                   ('138466c3-49a2-41c1-8565-7b76c0c50488', 'Chinese', 'zh'),
-                   ('2e234da2-50c1-4027-9436-ef08e2153195', 'Russian', 'ru'),
-                   ('bb168b6d-1ee8-4151-8efb-675e24c33499', 'Korean', 'ko'),
-                   ('1a1eb8d5-e094-4f99-91e0-f2081d64b61b', 'Polish', 'pl'),
-                   ('423ef4d7-ea6f-4cfb-8aeb-5ecaa46edf9a', 'Italian', 'it'),
-                   ('fb0d9591-3644-478c-828e-7f2b009a07c7', 'French', 'fr'),
-                   ('04b19dc7-e1d8-44a8-908c-2d85cb816cdd', 'Bengali', 'bn'),
-                   ('ff16c20a-06cb-4ae8-8ecb-4b1d5d2aadca', 'Arabic', 'ar'),
-                   ('c2fd2a1d-2966-42cd-a97e-9219754dd9c3', 'Yiddish', 'yi'),
-                   ('01485d45-eb08-44bb-bec7-d82cda720b00', 'Haitian Creole', 'ht'),
-                   ('f0372c8c-64c1-430b-9da3-5b39a48fdc9a', 'Urdu', 'ur');
+            INSERT INTO language(id, name, language_standard_id, local_name)
+            VALUES ('c95afee7-2bc4-4c12-acdd-344b5432520e', 'English', 'en', 'English'),
+                   ('b4449fdb-2f08-4c56-9c43-f0da407787d8', 'Spanish', 'es', 'Español'),
+                   ('138466c3-49a2-41c1-8565-7b76c0c50488', 'Chinese', 'zh', '中文'),
+                   ('2e234da2-50c1-4027-9436-ef08e2153195', 'Russian', 'ru', 'Русский'),
+                   ('bb168b6d-1ee8-4151-8efb-675e24c33499', 'Korean', 'ko', '한국어'),
+                   ('1a1eb8d5-e094-4f99-91e0-f2081d64b61b', 'Polish', 'pl', 'Polski'),
+                   ('423ef4d7-ea6f-4cfb-8aeb-5ecaa46edf9a', 'Italian', 'it', 'Italiano'),
+                   ('fb0d9591-3644-478c-828e-7f2b009a07c7', 'French', 'fr', 'Français'),
+                   ('04b19dc7-e1d8-44a8-908c-2d85cb816cdd', 'Bengali', 'bn', 'বাংলা'),
+                   ('ff16c20a-06cb-4ae8-8ecb-4b1d5d2aadca', 'Arabic', 'ar', 'العربية'),
+                   ('c2fd2a1d-2966-42cd-a97e-9219754dd9c3', 'Yiddish', 'yi', 'ייִדיש'),
+                   ('01485d45-eb08-44bb-bec7-d82cda720b00', 'Haitian Creole', 'ht', 'Krèyol ayisyen'),
+                   ('f0372c8c-64c1-430b-9da3-5b39a48fdc9a', 'Urdu', 'ur', 'اردو');
         </sql>
         <sql>
-            INSERT INTO application(id, app_name)
+            INSERT INTO application(id, name)
             VALUES ('6d67441b-3507-4d39-88fb-e165f594ef7b', 'app01'),
                    ('551e4105-0a7e-40a0-a9b6-7dc3a504d561', 'app02'),
                    ('7fbb8da5-9e1a-49d7-8ef6-cf7113f431d9', 'app03');
@@ -187,14 +195,24 @@
                     ('343d87ad-e98d-4915-af2f-aecb4c4c5b95', '6d67441b-3507-4d39-88fb-e165f594ef7b', 'c2fd2a1d-2966-42cd-a97e-9219754dd9c3'),
                     ('8e57b8c7-9d0e-4e5c-b911-b6120252ae9e', '6d67441b-3507-4d39-88fb-e165f594ef7b', '01485d45-eb08-44bb-bec7-d82cda720b00'),
                     ('17259745-8d7d-4739-880c-e570e7fa2a30', '6d67441b-3507-4d39-88fb-e165f594ef7b', 'f0372c8c-64c1-430b-9da3-5b39a48fdc9a'),
-
                     ('4e6ba44a-5446-4be9-a4a2-1090a9cca41a', '7fbb8da5-9e1a-49d7-8ef6-cf7113f431d9', 'c95afee7-2bc4-4c12-acdd-344b5432520e'),
                     ('e00b33e9-00c7-4670-9518-e467f58bf6b6', '7fbb8da5-9e1a-49d7-8ef6-cf7113f431d9', 'b4449fdb-2f08-4c56-9c43-f0da407787d8'),
                     ('31177f51-67f9-46ba-b193-00664e33f896', '7fbb8da5-9e1a-49d7-8ef6-cf7113f431d9', '138466c3-49a2-41c1-8565-7b76c0c50488'),
                     ('3e0c9ad2-308d-4dc0-a33d-372cea213bcf', '7fbb8da5-9e1a-49d7-8ef6-cf7113f431d9', '1a1eb8d5-e094-4f99-91e0-f2081d64b61b'),
                     ('e95b36db-1313-4890-add1-89d43ffd5af5', '7fbb8da5-9e1a-49d7-8ef6-cf7113f431d9', '423ef4d7-ea6f-4cfb-8aeb-5ecaa46edf9a'),
-
                     ('edcb5992-2788-4042-b125-38b145c1e830', '551e4105-0a7e-40a0-a9b6-7dc3a504d561', 'c95afee7-2bc4-4c12-acdd-344b5432520e');
+        </sql>
+        <sql>
+            INSERT INTO user_preference_type(id, name)
+            VALUES ('e8dc1b46-65a1-4e1f-9516-009560a50a2f', 'language'),
+                   ('3505d910-a479-423b-b3f8-a3d16798a651', 'communication')
+        </sql>
+
+        <sql>
+            INSERT INTO user_preference_option(id, option_value, user_preference_type_id)
+            VALUES ('1843c690-1041-48c3-a4a5-428d24924b98', 'phone', '3505d910-a479-423b-b3f8-a3d16798a651'),
+                   ('3505d910-a479-423b-b3f8-a3d16798a651', 'text/sms', '3505d910-a479-423b-b3f8-a3d16798a651'),
+                   ('0e3929a9-fabc-4d73-8cfe-14c89c51b531', 'email', '3505d910-a479-423b-b3f8-a3d16798a651')
         </sql>
     </changeSet>
     <changeSet id="custom-fields-introduction" author="open-source-initial-author">
@@ -374,10 +392,10 @@
             UPDATE role SET display_name = role_name WHERE display_name IS NULL;
             ALTER TABLE role ALTER COLUMN display_name SET NOT NULL;
 
-            UPDATE application SET display_name = 'Application 01' WHERE app_name = 'app01';
-            UPDATE application SET display_name = 'Application 02' WHERE app_name = 'app02';
-            UPDATE application SET display_name = 'Application 03' WHERE app_name = 'app03';
-            UPDATE application SET display_name = app_name WHERE display_name IS NULL;
+            UPDATE application SET display_name = 'Application 01' WHERE name = 'app01';
+            UPDATE application SET display_name = 'Application 02' WHERE name = 'app02';
+            UPDATE application SET display_name = 'Application 03' WHERE name = 'app03';
+            UPDATE application SET display_name = name WHERE display_name IS NULL;
             ALTER TABLE application ALTER COLUMN display_name SET NOT NULL;
         </sql>
     </changeSet>

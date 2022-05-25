@@ -1,7 +1,6 @@
 package io.nuvalence.user.management.api.service.mapper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.nuvalence.user.management.api.service.entity.ApplicationPreferenceEntity;
 import io.nuvalence.user.management.api.service.entity.PermissionEntity;
 import io.nuvalence.user.management.api.service.entity.RoleEntity;
 import io.nuvalence.user.management.api.service.entity.UserCustomFieldEntity;
@@ -74,7 +73,7 @@ public class MapperUtils {
      * @return Updated preferences.
      */
     public static UserPreferenceDTO overlapPreferences(UserPreferenceEntity userPreference,
-                                                       ApplicationPreferenceEntity appPreferences) {
+                                                       UserPreferenceEntity appPreferences) {
         return UserPreferenceEntityMapper.INSTANCE.userPreferencesEntityToDto(
                 overlapPreferenceEntities(userPreference, appPreferences)
         );
@@ -88,13 +87,13 @@ public class MapperUtils {
      * @return Merged preferences.
      */
     public static UserPreferenceEntity overlapPreferenceEntities(UserPreferenceEntity userPreference,
-                                                                 ApplicationPreferenceEntity appPreferences) {
+                                                                 UserPreferenceEntity appPreferences) {
         UserPreferenceEntity updatedPreferences = new UserPreferenceEntity();
         updatedPreferences.setId(userPreference.getId());
-        updatedPreferences.setCommunicationPreference(userPreference.getCommunicationPreference());
-        updatedPreferences.setLanguage(
-                (appPreferences.getLanguage() != null) ? appPreferences.getLanguage() : userPreference.getLanguage()
-        );
+        //updatedPreferences.setCommunicationPreference(userPreference.getCommunicationPreference());
+        //updatedPreferences.setLanguage(
+        //  (appPreferences.getLanguage() != null) ? appPreferences.getLanguage() : userPreference.getLanguage()
+        //);
 
         return updatedPreferences;
     }
