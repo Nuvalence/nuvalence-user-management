@@ -2,18 +2,8 @@ version: v1beta11
 
 # `vars` specifies variables which may be used as ${VAR_NAME} in devspace.yaml
 vars:
-- name: REGISTRY
-  value: us-east4-docker.pkg.dev/ny-dol-wp-work-manager/wp-docker-repo
 - name: IMAGE
-  value: ${REGISTRY}/wp-user-api:latest
-
-# images:
-#   userapi:
-#     image: ${IMAGE}
-#     dockerfile: userapi.Dockerfile
-#     build:
-#       kaniko:
-#         cache: true
+  value: us-east4-docker.pkg.dev/ny-dol-wp-work-manager/wp-docker-repo/wp-user-api
 
 # `deployments` tells DevSpace how to deploy this project
 deployments:
@@ -44,15 +34,6 @@ dev:
     # local filesystem and the remote container filesystem. It uses the same syntax as `.gitignore`.
     excludePaths:
     - .git/
-
-  # `dev.terminal` tells DevSpace to open a terminal as a last step during `devspace dev`
-  terminal:
-    imageSelector: ${IMAGE} # Select the Pod that runs our `${IMAGE}`
-    # With this optional `command` we can tell DevSpace to run a script when opening the terminal
-    # This is often useful to display help info for new users or perform initial tasks (e.g. installing dependencies)
-    # DevSpace has generated an example ./devspace_start.sh file in your local project - Feel free to customize it!
-    command:
-    - ./devspace_start.sh
 
   # Since our Helm charts and manifests deployments are often optimized for production,
   # DevSpace let's you swap out Pods dynamically to get a better dev environment
@@ -86,5 +67,4 @@ profiles:
     images:
       app:
         image: ${IMAGE} # Use the value of our `${IMAGE}` variable here (see vars above)
-        dockerfile: userapi.Dockerfile
-        context: ./
+        dockerfile: ./Dockerfile

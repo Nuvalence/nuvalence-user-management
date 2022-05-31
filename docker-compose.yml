@@ -41,7 +41,7 @@ services:
   userapi:
     build:
       context: .
-      dockerfile: userapi.Dockerfile
+      dockerfile: Dockerfile
     container_name: userapi
     ports:
       - "8080:8080"

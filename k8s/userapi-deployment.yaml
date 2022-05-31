@@ -25,7 +25,7 @@ spec:
         io.kompose.service: userapi
     spec:
       containers:
-        - image: userapi
+        - image: us-east4-docker.pkg.dev/ny-dol-wp-work-manager/wp-docker-repo/wp-user-api
           name: userapi
           ports:
             - containerPort: 8080
