@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.26.1 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: userapipostgres
+  name: userapipostgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: userapipostgres
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.26.1 (HEAD)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/user-api: "true"
+        io.kompose.service: userapipostgres
+    spec:
+      containers:
+        - env:
+            - name: PGDATABASE
+              value: userapipostgres
+            - name: PGPORT
+              value: "5439"
+            - name: POSTGRES_DB
+              value: userapipostgres
+            - name: POSTGRES_PASSWORD
+              value: root
+            - name: POSTGRES_USER
+              value: root
+          image: postgres:14-alpine
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+            failureThreshold: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+          name: userapipostgres
+          ports:
+            - containerPort: 5439
+          resources: {}
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: db-data
+      restartPolicy: Always
+      volumes:
+        - name: db-data
+          persistentVolumeClaim:
+            claimName: db-data
+status: {}

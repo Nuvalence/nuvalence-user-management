@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.26.1 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: userapipostgres
+  name: userapipostgres
+spec:
+  ports:
+    - name: "5439"
+      port: 5439
+      targetPort: 5439
+  selector:
+    io.kompose.service: userapipostgres
+status:
+  loadBalancer: {}
