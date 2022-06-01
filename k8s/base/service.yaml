@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-management
+  labels:
+    app: user-management
+spec:
+  selector:
+    app: user-management
+  ports:
+    - name: "8080"
+      port: 8080
+      targetPort: 8080

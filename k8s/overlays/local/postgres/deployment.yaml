@@ -1,9 +1,6 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  annotations:
-    kompose.cmd: kompose convert
-    kompose.version: 1.26.1 (HEAD)
   creationTimestamp: null
   labels:
     io.kompose.service: userapipostgres
@@ -17,9 +14,6 @@ spec:
     type: Recreate
   template:
     metadata:
-      annotations:
-        kompose.cmd: kompose convert
-        kompose.version: 1.26.1 (HEAD)
       creationTimestamp: null
       labels:
         io.kompose.network/user-api: "true"
