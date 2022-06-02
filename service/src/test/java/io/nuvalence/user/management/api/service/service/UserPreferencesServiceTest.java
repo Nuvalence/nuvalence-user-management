@@ -22,15 +22,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class UserPreferencesServiceTest {
-
-    @Mock
-    ApplicationPreferencesRepository applicationPreferencesRepository;
 
     @Mock
     UserPreferencesRepository userPreferencesRepository;
@@ -40,6 +39,9 @@ public class UserPreferencesServiceTest {
 
     @Mock
     ApplicationRepository applicationRepository;
+
+    @Mock
+    ApplicationPreferencesRepository applicationPreferencesRepository;
 
     @InjectMocks
     UserPreferenceService userPreferenceService;
@@ -104,6 +106,8 @@ public class UserPreferencesServiceTest {
 
         when(userPreferencesRepository.findPreferencesByUserId(user.getId())).thenReturn(Optional.of(preferences));
         when(applicationRepository.getApplicationById(application.getId())).thenReturn(Optional.of(application));
+        when(applicationPreferencesRepository.findApplicationPreferenceByApplicationId(user.getId(),
+                application.getId())).thenReturn(Optional.of(preferences));
 
         UserPreferenceDTO expected = new UserPreferenceDTO()
                 .id(preferences.getId());

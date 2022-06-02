@@ -33,7 +33,7 @@ public class UserPreferenceService {
     private final ApplicationPreferencesRepository applicationPreferencesRepository;
     private final ApplicationRepository applicationRepository;
 
-
+    
     /**
      * Returns a user's supported preferences based on their ID and application ID. A user's general
      * preferences may not be supported by a given application; getting the supported preferences will

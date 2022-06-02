@@ -238,7 +238,7 @@ paths:
     put:
       tags:
         - "user"
-      summary: "Set preferences for a given application."
+      summary: "Set preference for a given application."
       operationId: "updateApplicationPreferences"
       parameters:
         - name: "id"
@@ -253,9 +253,9 @@ paths:
           required: true
           type: "string"
           format: uuid
-        - name: userPreferences
+        - name: userPreference
           in: body
-          description: "Application preferences object"
+          description: "User preference object"
           required: true
           schema:
             $ref: "#/definitions/UserPreferenceDTO"
@@ -591,7 +591,7 @@ paths:
           description: "Successful operation"
           schema:
             type: array
-            example: [ { id: "1234", languageName: "English", languageStandardId: "en" } ]
+            example: [ { id: "1234", name: "English", languageStandardId: "en", localName: "English" } ]
             items:
               $ref: "#/definitions/LanguageDTO"
 
@@ -822,6 +822,20 @@ paths:
         "404":
           description: "Role not found"
 
+  /userPreferenceType:
+    get:
+      tags:
+        - "userPreferenceType"
+      summary: "Return all user preference types."
+      operationId: "getUserPreferenceTypes"
+      responses:
+        "200":
+          description: "Successful operation"
+          schema:
+            type: array
+            example: [ { id: "1234", name: "communication" } ]
+            items:
+              $ref: "#/definitions/UserPreferenceTypeDTO"
 definitions:
   CustomFieldDataType:
     type: string
@@ -1234,3 +1248,7 @@ definitions:
         format: uuid
       name:
         type: string
+  AllUserPreferenceTypes:
+    type: array
+    items:
+      $ref: '#/definitions/UserPreferenceTypeDTO'
