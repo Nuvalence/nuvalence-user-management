@@ -5,11 +5,10 @@ metadata:
   labels:
     io.kompose.service: userapipostgres
 spec:
+  type: NodePort
   ports:
-    - name: "5439"
-      port: 5439
+    - port: 5439
       targetPort: 5439
+      nodePort: 30007
   selector:
     io.kompose.service: userapipostgres
-status:
-  loadBalancer: {}

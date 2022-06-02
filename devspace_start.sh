@@ -21,5 +21,5 @@ This is how you can work with it:
 - Some ports will be forwarded, so you can access this container on your local machine via ${COLOR_CYAN}http://localhost:8080${COLOR_RESET}
 "
 
-./gradlew clean build
+gradle clean build
 java -jar service/build/libs/service-0.0.1-SNAPSHOT.jar -Dspring.profiles.active=local
