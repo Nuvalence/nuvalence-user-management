@@ -13,7 +13,7 @@ spec:
         app: user-management
     spec:
       containers:
-        - image: us-east4-docker.pkg.dev/ny-dol-wp-work-manager/wp-docker-repo/wp-user-api:latest
+        - image: us-east4-docker.pkg.dev/ny-dol-wp-work-manager/wp-docker-repo/wp-user-api
           name: user-management
           securityContext:
             runAsNonRoot: true

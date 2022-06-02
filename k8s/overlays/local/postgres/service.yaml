@@ -1,10 +1,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  creationTimestamp: null
+  name: userapipostgres
   labels:
     io.kompose.service: userapipostgres
-  name: userapipostgres
 spec:
   ports:
     - name: "5439"

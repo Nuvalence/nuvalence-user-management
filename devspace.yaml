@@ -11,7 +11,11 @@ deployments:
   # This deployment uses `kubectl` but you can also define `helm` deployments
   kubectl:
     manifests:
-    - k8s/
+    - k8s/base
+    - k8s/overlays/local/patches
+    - k8s/overlays/local/pgadmin
+    - k8s/overlays/local/postgres
+    kustomize: true
 
 # `dev` only applies when you run `devspace dev`
 dev:
@@ -34,7 +38,7 @@ dev:
     # local filesystem and the remote container filesystem. It uses the same syntax as `.gitignore`.
     excludePaths:
     - .git/
-  
+
   # `dev.terminal` tells DevSpace to open a terminal as a last step during `devspace dev`
   terminal:
     imageSelector: ${IMAGE} # Select the Pod that runs our `${IMAGE}`
