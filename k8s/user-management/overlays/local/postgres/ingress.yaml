@@ -14,5 +14,5 @@ spec:
             name: postgres
             port:
               number: 5439
-        path: /postgres
+        path: /
         pathType: Prefix
