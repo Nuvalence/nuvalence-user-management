@@ -7,12 +7,6 @@ vars:
 
 # `deployments` tells DevSpace how to deploy this project
 deployments:
-- name: ingress-nginx
-  namespace: ingress-nginx
-  kubectl:
-    manifests:
-    - k8s/ingress-nginx
-    
 - name: nuvalence-user-management
   namespace: user-management
   # This deployment uses `kubectl` but you can also define `helm` deployments

@@ -1,7 +1,9 @@
 #!/bin/bash
 
 # Install Nginx Ingress Controller to the K8s cluster
-kubectl apply -f k8s/ingress-nginx/manifest.yaml
+helm upgrade --install ingress-nginx ingress-nginx \
+  --repo https://kubernetes.github.io/ingress-nginx \
+  --namespace ingress-nginx --create-namespace
 
 # Watch the Ingress Nginx rollout status
 kubectl rollout status deployment ingress-nginx-controller -n ingress-nginx
