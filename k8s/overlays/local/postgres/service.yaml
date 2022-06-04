@@ -5,8 +5,7 @@ metadata:
   labels:
     io.kompose.service: userapipostgres
 spec:
-  type: ExternalName
-  externalName: localhost
+  type: NodePort
   ports:
     - name: port
       port: 5439

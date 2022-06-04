@@ -1,0 +1,23 @@
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://user-management-postgres-postgresql.user-management.svc.cluster.local:5439/postgres?stringtype=unspecified
+    username: postgres
+    password: ${POSTGRES_PASSWORD}
+  liquibase:
+    enabled: true
+    change-log: classpath:db/liquibase-changelog.xml
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://user-management-postgres-postgresql.user-management.svc.cluster.local:5439/postgres?stringtype=unspecified
+    user: postgres
+    password: ${POSTGRES_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: none
+    database-platform: org.hibernate.dialect.PostgreSQL9Dialect
+management:
+  endpoints:
+    web:
+      cors:
+        allowed-origins: http://localhost:4200, http://localhost:4201
+        allow-credentials: true
