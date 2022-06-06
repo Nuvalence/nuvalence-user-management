@@ -22,4 +22,4 @@ This is how you can work with it:
 "
 
 gradle clean build
-java -jar service/build/libs/service-0.0.1-SNAPSHOT.jar -Dspring.profiles.active=application-k8s.yml
+java -jar -Dspring.profiles.active=k8s service/build/libs/service-0.0.1-SNAPSHOT.jar 
