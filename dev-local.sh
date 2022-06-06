@@ -11,6 +11,9 @@ helm upgrade --install "$NAMESPACE-postgres" bitnami/postgresql \
   --version 11.6.3 \
   --namespace "$NAMESPACE"
 
+# Watch the stateful set rollout for the Postgres
+kubectl rollout status statefulset "$NAMESPACE-postgres-postgresql" -n $NAMESPACE
+
 # Install Nginx Ingress Controller to the K8s cluster
 helm upgrade --install ingress-nginx ingress-nginx \
   --repo https://kubernetes.github.io/ingress-nginx \

@@ -1,16 +1,16 @@
 spring:
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/user
-    user: username
-    password: password
+    url: jdbc:postgresql://user-management-postgres-postgresql.user-management.svc.cluster.local:5432/postgres?stringtype=unspecified
+    username: postgres
+    password: ${POSTGRES_PASSWORD}
   liquibase:
     enabled: true
     change-log: classpath:db/liquibase-changelog.xml
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/user
-    user: username
-    password: password
+    url: jdbc:postgresql://user-management-postgres-postgresql.user-management.svc.cluster.local:5432/postgres?stringtype=unspecified
+    user: postgres
+    password: ${POSTGRES_PASSWORD}
   jackson:
     serialization:
       write-dates-with-zone-id: true

@@ -15,6 +15,13 @@ spec:
       containers:
         - image: us-east4-docker.pkg.dev/ny-dol-wp-work-manager/wp-docker-repo/wp-user-api
           name: user-management
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: user-management-postgres-postgresql # Comes from the Bitnami Postgres Helm chart installation
+                  key: postgres-password
+                  optional: false
           securityContext:
             runAsNonRoot: true
           ports:
