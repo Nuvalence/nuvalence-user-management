@@ -49,4 +49,7 @@ public class UserEntity {
 
     @OneToMany(mappedBy = "user")
     private List<UserRoleEntity> userRoleEntities;
+
+    @OneToMany(mappedBy = "user")
+    private List<UserCustomFieldEntity> customFields;
 }
