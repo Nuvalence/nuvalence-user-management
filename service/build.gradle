@@ -52,6 +52,8 @@ dockerCompose {
 	tcpPortsToIgnoreWhenWaiting = [5439]
 }
 
+composeUp.dependsOn build
+
 test {
 	useJUnitPlatform()
 }
