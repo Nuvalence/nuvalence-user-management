@@ -1,4 +1,4 @@
-version: '3.9'
+version: '3'
 
 services:
   userapipostgres:
@@ -39,16 +39,14 @@ services:
       - pgadmin-data:/var/lib/pgadmin
 
   userapi:
-    image: 'docker-spring-boot-postgres:latest'
     build:
       context: .
-      dockerfile: userapi.Dockerfile
+      dockerfile: Dockerfile
     container_name: userapi
     ports:
       - "8080:8080"
     depends_on:
-      userapipostgres:
-        condition: service_healthy
+      - userapipostgres
     networks:
       - user-api
 
