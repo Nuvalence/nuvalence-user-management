@@ -2,6 +2,7 @@ package io.nuvalence.user.management.api.service.entity;
 
 import com.vladmihalcea.hibernate.type.json.JsonType;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -10,7 +11,7 @@ import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -25,6 +26,7 @@ import javax.persistence.Table;
  */
 @Getter
 @Setter
+@Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
@@ -59,5 +61,5 @@ public class UserCustomFieldEntity {
     private String customFieldValueJson;
 
     @Column(name = "custom_field_value_datetime", nullable = true)
-    private LocalDateTime customFieldValueDateTime;
+    private OffsetDateTime customFieldValueDateTime;
 }

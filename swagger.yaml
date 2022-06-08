@@ -476,6 +476,17 @@ paths:
           description: "You are not authorized to make this request"
 
 definitions:
+  CustomFieldDataType:
+    type: string
+    enum: &CUSTOM_FIELD_DATA_TYPE
+      - string
+      - int
+      - json
+      - datetime
+  CustomFieldType:
+    type: string
+    enum: &CUSTOM_FIELD_TYPE
+      - drop_down_list
   AllRoles:
     type: array
     items:
@@ -512,6 +523,10 @@ definitions:
       preferences:
         type: object
         $ref: '#/definitions/UserPreferenceDTO'
+      customFields:
+        type: array
+        items:
+          $ref: '#/definitions/UserCustomFieldDTO'
   RoleDTO:
     type: object
     required:
@@ -575,6 +590,10 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/RoleDTO'
+      customFields:
+        type: array
+        items:
+          $ref: '#/definitions/CreateOrUpdateUserCustomFieldDTO'
   ValidatePermissionDTO:
     type: object
     required:
@@ -594,3 +613,114 @@ definitions:
       languageStandardId:
         type: string
         example: "en"
+  CustomFieldOptionDTO:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+      optionValue:
+        type: string
+      displayText:
+        type: string
+  CreateOrUpdateCustomFieldOptionDTO:
+    type: object
+    required:
+      - optionValue
+      - displayText
+    properties:
+      optionValue:
+        type: string
+      displayText:
+        type: string
+  CustomFieldDTO:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+      name:
+        type: string
+      displayText:
+        type: string
+      type:
+        type: string
+        enum: [drop_down_list]
+      dataType:
+        type: string
+        enum: [string, int, json, datetime]
+      options:
+        type: array
+        items:
+          $ref: "#/definitions/CustomFieldOptionDTO"
+  UpdateCustomFieldDTO:
+    type: object
+    required:
+      - name
+      - displayText
+    properties:
+      name:
+        type: string
+      displayText:
+        type: string
+      options:
+        type: array
+        items:
+          $ref: "#/definitions/CreateOrUpdateCustomFieldOptionDTO"
+  CreateCustomFieldDTO:
+    type: object
+    required:
+      - name
+      - displayText
+      - type
+      - dataType
+    properties:
+      name:
+        type: string
+      displayText:
+        type: string
+      type:
+        type: string
+        enum: *CUSTOM_FIELD_TYPE
+      dataType:
+        type: string
+        enum: *CUSTOM_FIELD_DATA_TYPE
+      options:
+        type: array
+        items:
+          $ref: "#/definitions/CreateOrUpdateCustomFieldOptionDTO"
+  CreateOrUpdateUserCustomFieldDTO:
+    type: object
+    required:
+      - customFieldId
+    properties:
+      customFieldId:
+        type: string
+        format: uuid
+      value:
+        type: object
+  UserCustomFieldDTO:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+      customFieldId:
+        type: string
+        format: uuid
+      type:
+        type: string
+        enum: *CUSTOM_FIELD_TYPE
+      dataType:
+        type: string
+        enum: *CUSTOM_FIELD_DATA_TYPE
+      name:
+        type: string
+      displayText:
+        type: string
+      value:
+        type: object
+      options:
+        type: array
+        items:
+          $ref: "#/definitions/CustomFieldOptionDTO"

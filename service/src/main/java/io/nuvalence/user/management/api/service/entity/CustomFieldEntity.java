@@ -1,12 +1,14 @@
 package io.nuvalence.user.management.api.service.entity;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 
+import java.util.List;
 import java.util.UUID;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -14,6 +16,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 /**
@@ -21,6 +24,7 @@ import javax.persistence.Table;
  */
 @Getter
 @Setter
+@Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
@@ -38,12 +42,15 @@ public class CustomFieldEntity {
 
     @ManyToOne
     @JoinColumn(name = "custom_field_type_id", nullable = false)
-    private CustomFieldTypeEntity customFieldType;
+    private CustomFieldTypeEntity type;
 
     @ManyToOne
-    @JoinColumn(name = "data_type_id")
-    private DataTypeEntity dataType;
+    @JoinColumn(name = "custom_field_data_type_id")
+    private CustomFieldDataTypeEntity dataType;
 
     @Column(name = "display_text", nullable = false, length = 255)
     private String displayText;
+
+    @OneToMany(mappedBy = "customField")
+    private List<CustomFieldOptionEntity> options;
 }

@@ -1,12 +1,18 @@
 package io.nuvalence.user.management.api.service.mapper;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.nuvalence.user.management.api.service.entity.ApplicationPreferenceEntity;
 import io.nuvalence.user.management.api.service.entity.RoleEntity;
+import io.nuvalence.user.management.api.service.entity.UserCustomFieldEntity;
 import io.nuvalence.user.management.api.service.entity.UserEntity;
 import io.nuvalence.user.management.api.service.entity.UserPreferenceEntity;
 import io.nuvalence.user.management.api.service.entity.UserRoleEntity;
+import io.nuvalence.user.management.api.service.enums.CustomFieldType;
+import io.nuvalence.user.management.api.service.generated.models.CustomFieldDataType;
 import io.nuvalence.user.management.api.service.generated.models.RoleDTO;
+import io.nuvalence.user.management.api.service.generated.models.UserCustomFieldDTO;
 import io.nuvalence.user.management.api.service.generated.models.UserPreferenceDTO;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -17,6 +23,8 @@ import java.util.stream.Collectors;
 /**
  * Simple Mapping utility class.
  */
+
+@Slf4j
 public class MapperUtils {
 
     /**
@@ -115,5 +123,80 @@ public class MapperUtils {
 
         return mapRoleEntitiesToRoleList(user.getUserRoleEntities().stream()
                 .map(UserRoleEntity::getRole).collect(Collectors.toList()), rolePermissionMappings);
+    }
+
+    /**
+     * Simple list mapper for {@link UserCustomFieldEntity} and {@link UserCustomFieldDTO}.
+     *
+     * @param user the user
+     * @return a list of custom fields
+     */
+    public static List<UserCustomFieldDTO> mapUserEntityToCustomFieldDtoList(UserEntity user) {
+        if (user.getCustomFields() == null) {
+            return null;
+        }
+
+        return user.getCustomFields()
+                .stream().map(MapperUtils::mapUserCustomFieldEntityToDto)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Maps between {@link UserCustomFieldEntity} and
+     * {@link UserCustomFieldDTO}.
+     *
+     * @param userCustomField the user custom field.
+     * @return a dto version of the user custom field.
+     */
+    public static UserCustomFieldDTO mapUserCustomFieldEntityToDto(UserCustomFieldEntity userCustomField) {
+        UserCustomFieldDTO dto = new UserCustomFieldDTO();
+        dto.setId(userCustomField.getId());
+        dto.setCustomFieldId(userCustomField.getCustomField().getId());
+        dto.setType(UserCustomFieldDTO.TypeEnum.fromValue(
+                userCustomField.getCustomField().getType().getType()
+        ));
+        dto.setDataType(UserCustomFieldDTO.DataTypeEnum.fromValue(
+                userCustomField.getCustomField().getDataType().getType()
+        ));
+        dto.setName(userCustomField.getCustomField().getName());
+        dto.setDisplayText(userCustomField.getCustomField().getDisplayText());
+
+        switch (CustomFieldDataType.fromValue(userCustomField.getCustomField().getDataType().getType())) {
+            case INT:
+                dto.setValue(userCustomField.getCustomFieldValueInt());
+                break;
+            case JSON:
+                if (userCustomField.getCustomFieldValueJson() != null) {
+                    try {
+                        dto.setValue(
+                                new ObjectMapper().convertValue(userCustomField.getCustomFieldValueJson(),Object.class)
+                        );
+                    } catch (IllegalArgumentException e) {
+                        log.error("Exception occurred in MapperUtils.mapUserCustomFieldEntityToDto: {}",
+                                e.getMessage());
+                    }
+                }
+                break;
+            case DATETIME:
+                dto.setValue(userCustomField.getCustomFieldValueDateTime());
+                break;
+            case STRING:
+            default:
+                dto.setValue(userCustomField.getCustomFieldValueString());
+                break;
+        }
+
+        // only populate options if type is drop-down list
+        if (CustomFieldType.fromText(userCustomField.getCustomField().getType().getType())
+                == CustomFieldType.DROP_DOWN_LIST
+                && userCustomField.getCustomField().getOptions() != null
+                && userCustomField.getCustomField().getOptions().size() > 0) {
+            dto.setOptions(userCustomField.getCustomField().getOptions()
+                    .stream().map(CustomFieldMapper.INSTANCE::convertOptionEntityToOptionDto)
+                    .collect(Collectors.toList())
+            );
+        }
+
+        return dto;
     }
 }

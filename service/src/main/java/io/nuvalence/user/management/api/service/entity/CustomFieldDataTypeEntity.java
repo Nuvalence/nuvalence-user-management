@@ -22,8 +22,8 @@ import javax.persistence.Table;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "data_type")
-public class DataTypeEntity {
+@Table(name = "custom_field_data_type")
+public class CustomFieldDataTypeEntity {
     @Id
     @GeneratedValue(generator = "uuid2")
     @GenericGenerator(name = "uuid2", strategy = "org.hibernate.id.UUIDGenerator")

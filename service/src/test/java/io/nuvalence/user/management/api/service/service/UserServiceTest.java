@@ -3,7 +3,11 @@ package io.nuvalence.user.management.api.service.service;
 import io.nuvalence.user.management.api.service.cerbos.CerbosClient;
 import io.nuvalence.user.management.api.service.config.exception.BusinessLogicException;
 import io.nuvalence.user.management.api.service.config.exception.ResourceNotFoundException;
+import io.nuvalence.user.management.api.service.entity.CustomFieldDataTypeEntity;
+import io.nuvalence.user.management.api.service.entity.CustomFieldEntity;
+import io.nuvalence.user.management.api.service.entity.CustomFieldTypeEntity;
 import io.nuvalence.user.management.api.service.entity.RoleEntity;
+import io.nuvalence.user.management.api.service.entity.UserCustomFieldEntity;
 import io.nuvalence.user.management.api.service.entity.UserEntity;
 import io.nuvalence.user.management.api.service.entity.UserRoleEntity;
 import io.nuvalence.user.management.api.service.generated.models.RoleDTO;
@@ -11,6 +15,7 @@ import io.nuvalence.user.management.api.service.generated.models.UserCreationReq
 import io.nuvalence.user.management.api.service.generated.models.UserDTO;
 import io.nuvalence.user.management.api.service.generated.models.UserRoleDTO;
 import io.nuvalence.user.management.api.service.repository.RoleRepository;
+import io.nuvalence.user.management.api.service.repository.UserCustomFieldRepository;
 import io.nuvalence.user.management.api.service.repository.UserRepository;
 import io.nuvalence.user.management.api.service.repository.UserRoleRepository;
 import org.junit.jupiter.api.Test;
@@ -37,6 +42,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings({"checkstyle:ClassFanOutComplexity", "checkstyle:ClassDataAbstractionCoupling"})
 public class UserServiceTest {
 
     @Mock
@@ -47,6 +53,9 @@ public class UserServiceTest {
 
     @Mock
     private UserRoleRepository userRoleRepository;
+
+    @Mock
+    private UserCustomFieldRepository userCustomFieldRepository;
 
     @Mock
     private CerbosClient client;
@@ -134,8 +143,12 @@ public class UserServiceTest {
     public void deleteUser_deletesUserCorrectly() {
         List<UserRoleEntity> userRoleEntities = List.of(createUserRoleEntity());
         UserEntity userEntity = createUserEntity();
+        UserCustomFieldEntity userCustomFieldEntity = createUserCustomFieldEntity();
+        userCustomFieldEntity.setUser(userEntity);
+        List<UserCustomFieldEntity> userCustomFieldEntities = List.of(userCustomFieldEntity);
 
         when(userRoleRepository.findAllByUserId(userEntity.getId())).thenReturn(userRoleEntities);
+        when(userCustomFieldRepository.findAllByUserId(userEntity.getId())).thenReturn(userCustomFieldEntities);
         when(userRepository.findById(userEntity.getId())).thenReturn(Optional.of(userEntity));
 
         ResponseEntity<Void> res = userService.deleteUser(userEntity.getId());
@@ -384,6 +397,30 @@ public class UserServiceTest {
         userEntity.setDisplayName("John Locke");
         userEntity.setExternalId("TestExternalId1234");
         return userEntity;
+    }
+
+    private UserCustomFieldEntity createUserCustomFieldEntity() {
+        CustomFieldTypeEntity customFieldTypeEntity = new CustomFieldTypeEntity();
+        customFieldTypeEntity.setId(UUID.fromString("a80a48b5-2995-4c54-9bd5-ebc258fab4ba"));
+        customFieldTypeEntity.setType("drop_down_list");
+
+        CustomFieldDataTypeEntity dataType = new CustomFieldDataTypeEntity();
+        dataType.setId(UUID.fromString("3e724ddf-4d09-452b-ae98-a8e3a76af19c"));
+        dataType.setType("string");
+
+        CustomFieldEntity customFieldEntity = new CustomFieldEntity();
+        customFieldEntity.setId(UUID.randomUUID());
+        customFieldEntity.setName("CUSTOM_FIELD_1");
+        customFieldEntity.setType(customFieldTypeEntity);
+        customFieldEntity.setDataType(dataType);
+        customFieldEntity.setDisplayText("Custom Field 1");
+
+        UserCustomFieldEntity userCustomFieldEntity = new UserCustomFieldEntity();
+        userCustomFieldEntity.setId(UUID.randomUUID());
+        userCustomFieldEntity.setCustomField(customFieldEntity);
+        userCustomFieldEntity.setCustomFieldValueString("TEST1");
+
+        return userCustomFieldEntity;
     }
 
     private UserRoleEntity createUserRoleEntity() {
