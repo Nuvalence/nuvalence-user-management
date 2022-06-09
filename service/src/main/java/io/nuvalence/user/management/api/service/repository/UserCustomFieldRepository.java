@@ -24,5 +24,6 @@ public interface UserCustomFieldRepository extends JpaRepository<UserCustomField
 
     @Query(value = "SELECT * FROM user_custom_field WHERE user_id = :userId AND custom_field_id = :customFieldId",
             nativeQuery = true)
-    Optional<UserCustomFieldEntity> findFirstByUserAndCustomField(UUID userId, UUID customFieldId);
+    Optional<UserCustomFieldEntity> findFirstByUserAndCustomField(@Param("userId") UUID userId,
+                                                                  @Param("customFieldId") UUID customFieldId);
 }

@@ -6,7 +6,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
  * Represents the possible types for custom fields.
  */
 public enum CustomFieldType {
-    DROP_DOWN_LIST("drop_down_list");
+    DROP_DOWN_LIST("drop_down_list"),
+    TEXT_FIELD("text_field");
 
     @JsonValue
     private final String type;
@@ -33,6 +34,6 @@ public enum CustomFieldType {
             }
         }
 
-        return DROP_DOWN_LIST;
+        return TEXT_FIELD;
     }
 }

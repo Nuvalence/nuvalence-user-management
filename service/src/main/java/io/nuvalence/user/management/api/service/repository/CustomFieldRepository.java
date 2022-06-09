@@ -17,4 +17,8 @@ import java.util.UUID;
 public interface CustomFieldRepository extends JpaRepository<CustomFieldEntity, UUID> {
     @Query(value = "SELECT * FROM custom_field WHERE name = :name", nativeQuery = true)
     Optional<CustomFieldEntity> findFirstByName(@Param("name") String name);
+
+    @Query(value = "SELECT * FROM custom_field WHERE name = :name AND id <> :customFieldId", nativeQuery = true)
+    Optional<CustomFieldEntity> findFirstByNameAndIdNot(@Param("name") String name,
+                                                        @Param("customFieldId") UUID customFieldId);
 }

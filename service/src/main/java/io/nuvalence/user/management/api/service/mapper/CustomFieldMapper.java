@@ -7,6 +7,7 @@ import io.nuvalence.user.management.api.service.generated.models.CustomFieldDTO;
 import io.nuvalence.user.management.api.service.generated.models.CustomFieldOptionDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
 
 /**
@@ -24,8 +25,8 @@ public interface CustomFieldMapper {
      * @param entity a custom field entity
      * @return custom field model
      */
-    @Mapping(source = "entity.type.type", target = "type")
-    @Mapping(source = "entity.dataType.type", target = "dataType")
+    @Mapping(source = "entity.type.type", target = "type", qualifiedByName = "customFieldType")
+    @Mapping(source = "entity.dataType.type", target = "dataType", qualifiedByName = "customFieldDataType")
     CustomFieldDTO convertEntityToDto(CustomFieldEntity entity);
 
     /**
@@ -61,4 +62,14 @@ public interface CustomFieldMapper {
     @Mapping(target = "displayText", source = "dto.displayText")
     CustomFieldOptionEntity convertOptionDtoToOptionEntity(CreateOrUpdateCustomFieldOptionDTO dto,
                                                            CustomFieldEntity customField);
+
+    @Named("customFieldType")
+    default CustomFieldDTO.TypeEnum toCustomFieldType(String type) {
+        return CustomFieldDTO.TypeEnum.fromValue(type);
+    }
+
+    @Named("customFieldDataType")
+    default CustomFieldDTO.DataTypeEnum toCustomFieldDataType(String type) {
+        return CustomFieldDTO.DataTypeEnum.fromValue(type);
+    }
 }

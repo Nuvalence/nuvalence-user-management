@@ -3,6 +3,7 @@ package io.nuvalence.user.management.api.service.controller;
 import io.nuvalence.user.management.api.service.entity.UserPreferenceEntity;
 import io.nuvalence.user.management.api.service.generated.controllers.UserApiDelegate;
 import io.nuvalence.user.management.api.service.generated.models.ApplicationPreferenceDTO;
+import io.nuvalence.user.management.api.service.generated.models.CreateOrUpdateUserCustomFieldDTO;
 import io.nuvalence.user.management.api.service.generated.models.RoleDTO;
 import io.nuvalence.user.management.api.service.generated.models.UserCreationRequest;
 import io.nuvalence.user.management.api.service.generated.models.UserDTO;
@@ -110,6 +111,11 @@ public class UserApiDelegateImpl implements UserApiDelegate {
                                                              ApplicationPreferenceDTO userPreferences) {
         userPreferenceService.updateApplicationPreferencesById(id, appId, userPreferences);
         return ResponseEntity.ok().build();
+    }
+
+    @Override
+    public ResponseEntity<Void> updateUserCustomFieldValue(UUID id, CreateOrUpdateUserCustomFieldDTO customField) {
+        return userService.updateCustomField(id, customField);
     }
 
 }

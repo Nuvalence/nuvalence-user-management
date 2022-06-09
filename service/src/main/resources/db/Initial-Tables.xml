@@ -300,7 +300,8 @@
         <addUniqueConstraint tableName="user_custom_field" columnNames="user_id, custom_field_id" constraintName="Unique_CustomField_To_User" />
         <sql>
             INSERT INTO custom_field_type (id, type)
-            VALUES ('a80a48b5-2995-4c54-9bd5-ebc258fab4ba', 'drop_down_list');
+            VALUES ('a80a48b5-2995-4c54-9bd5-ebc258fab4ba', 'drop_down_list'),
+                   ('5fc38fee-e8f5-11ec-8fea-0242ac120002', 'text_field');
         </sql>
         <sql>
             INSERT INTO custom_field_data_type (id, type)

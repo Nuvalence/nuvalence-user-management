@@ -24,6 +24,7 @@ public interface UserEntityMapper {
      */
     @Mapping(target = "preferences", ignore = true)
     @Mapping(target = "assignedRoles", ignore = true)
+    @Mapping(target = "customFields", ignore = true)
     UserDTO convertUserEntityToUserModel(UserEntity userEntity);
 
     /**

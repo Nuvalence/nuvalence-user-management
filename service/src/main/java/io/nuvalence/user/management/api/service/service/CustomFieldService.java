@@ -9,6 +9,7 @@ import io.nuvalence.user.management.api.service.entity.CustomFieldTypeEntity;
 import io.nuvalence.user.management.api.service.entity.UserCustomFieldEntity;
 import io.nuvalence.user.management.api.service.enums.CustomFieldType;
 import io.nuvalence.user.management.api.service.generated.models.CreateCustomFieldDTO;
+import io.nuvalence.user.management.api.service.generated.models.CreateOrUpdateCustomFieldOptionDTO;
 import io.nuvalence.user.management.api.service.generated.models.CustomFieldDTO;
 import io.nuvalence.user.management.api.service.generated.models.CustomFieldOptionDTO;
 import io.nuvalence.user.management.api.service.generated.models.UpdateCustomFieldDTO;
@@ -20,10 +21,12 @@ import io.nuvalence.user.management.api.service.repository.CustomFieldTypeReposi
 import io.nuvalence.user.management.api.service.repository.UserCustomFieldRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -50,8 +53,10 @@ public class CustomFieldService {
      *
      * @return A list of custom fields.
      */
-    public ResponseEntity<List<CustomFieldDTO>> getCustomFields() {
-        List<CustomFieldEntity> allCustomFields = customFieldRepository.findAll();
+    public ResponseEntity<List<CustomFieldDTO>> getAllCustomFields() {
+        List<CustomFieldEntity> allCustomFields = customFieldRepository.findAll(
+                Sort.by(Sort.Direction.ASC, "displayText")
+        );
         if (allCustomFields.isEmpty()) {
             throw new ResourceNotFoundException("No custom fields found.");
         }
@@ -61,6 +66,22 @@ public class CustomFieldService {
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(customFields);
+    }
+
+    /**
+     * Gets a custom field by its id.
+     *
+     * @param id the id of the custom field to retrieve.
+     * @return a custom field.
+     */
+    public ResponseEntity<CustomFieldDTO> getCustomFieldById(UUID id) {
+        Optional<CustomFieldEntity> customFieldEntity = customFieldRepository.findById(id);
+        if (customFieldEntity.isEmpty()) {
+            throw new ResourceNotFoundException("Custom field not found!");
+        }
+
+        CustomFieldDTO customField = CustomFieldMapper.INSTANCE.convertEntityToDto(customFieldEntity.get());
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(customField);
     }
 
     /**
@@ -75,7 +96,7 @@ public class CustomFieldService {
             throw new ResourceNotFoundException("Custom field not found!");
         }
 
-        if (isDropDownListType(customField.get())) {
+        if (!isDropDownListType(customField.get())) {
             throw new BusinessLogicException("The custom field is not a drop-down type.");
         }
 
@@ -144,6 +165,12 @@ public class CustomFieldService {
             throw new ResourceNotFoundException("Custom field not found!");
         }
 
+        Optional<CustomFieldEntity> checkName = customFieldRepository
+                .findFirstByNameAndIdNot(customField.getName(), customFieldId);
+        if (checkName.isPresent()) {
+            throw new BusinessLogicException("A custom field already exists with that name.");
+        }
+
         foundCustomField.get().setName(customField.getName());
         foundCustomField.get().setDisplayText(customField.getDisplayText());
         CustomFieldEntity savedCustomField = customFieldRepository.save(foundCustomField.get());
@@ -175,6 +202,7 @@ public class CustomFieldService {
 
         List<UserCustomFieldEntity> userCustomFields = userCustomFieldRepository.findAllByCustomField(customFieldId);
         userCustomFieldRepository.deleteAll(userCustomFields);
+        customFieldOptionRepository.deleteAll(foundCustomField.get().getOptions());
         customFieldRepository.delete(foundCustomField.get());
 
         return ResponseEntity.ok().build();
@@ -187,8 +215,9 @@ public class CustomFieldService {
      * @param options a list of custom field options.
      * @return a status code.
      */
-    public ResponseEntity<Void> updateCustomFieldOptions(UUID customFieldId, List<CustomFieldOptionDTO> options) {
-        if (options == null || !options.isEmpty()) {
+    public ResponseEntity<Void> updateCustomFieldOptions(UUID customFieldId,
+                                                         List<CreateOrUpdateCustomFieldOptionDTO> options) {
+        if (options == null || options.isEmpty()) {
             throw new BusinessLogicException("No options were passed in.");
         }
 
@@ -198,7 +227,7 @@ public class CustomFieldService {
             throw new ResourceNotFoundException("Custom field not found!");
         }
 
-        if (isDropDownListType(customField.get())) {
+        if (!isDropDownListType(customField.get())) {
             throw new BusinessLogicException("The custom field is not a drop-down type.");
         }
 
@@ -215,7 +244,28 @@ public class CustomFieldService {
         return ResponseEntity.ok().build();
     }
 
+    private CustomFieldDTO mapCustomFieldEntityToCustomFieldDto(CustomFieldEntity entity) {
+        CustomFieldDTO customField = new CustomFieldDTO();
+        customField.setId(entity.getId());
+        customField.setName(entity.getName());
+        customField.setDisplayText(entity.getDisplayText());
+        customField.setDataType(CustomFieldDTO.DataTypeEnum.fromValue(entity.getDataType().getType()));
+        customField.setType(CustomFieldDTO.TypeEnum.fromValue(entity.getType().getType()));
+
+        if (isDropDownListType(entity)
+                && entity.getOptions() != null
+                && !entity.getOptions().isEmpty()) {
+            List<CustomFieldOptionDTO> options = entity.getOptions()
+                    .stream().map(CustomFieldMapper.INSTANCE::convertOptionEntityToOptionDto)
+                    .sorted(Comparator.comparing(CustomFieldOptionDTO::getDisplayText))
+                    .collect(Collectors.toList());
+            customField.setOptions(options);
+        }
+
+        return customField;
+    }
+
     private boolean isDropDownListType(CustomFieldEntity customField) {
-        return  CustomFieldType.fromText(customField.getType().getType()) != CustomFieldType.DROP_DOWN_LIST;
+        return  CustomFieldType.fromText(customField.getType().getType()) == CustomFieldType.DROP_DOWN_LIST;
     }
 }

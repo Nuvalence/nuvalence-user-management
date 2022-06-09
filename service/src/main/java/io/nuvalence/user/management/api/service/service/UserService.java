@@ -24,6 +24,7 @@ import io.nuvalence.user.management.api.service.repository.UserRepository;
 import io.nuvalence.user.management.api.service.repository.UserRoleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -32,6 +33,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -91,7 +93,8 @@ public class UserService {
                         return userRoleEntity;
                     }).collect(Collectors.toList());
             Optional<RoleDTO> notFoundRole = user.getInitialRoles()
-                    .stream().filter(r -> userRoleEntities.stream().noneMatch(re -> re.getRole().getId() == r.getId()))
+                    .stream().filter(r -> userRoleEntities.stream().noneMatch(re ->
+                            re.getRole().getId().compareTo(r.getId()) == 0))
                     .findFirst();
             if (notFoundRole.isPresent()) {
                 throw new BusinessLogicException(
@@ -122,7 +125,7 @@ public class UserService {
                     }).collect(Collectors.toList());
             Optional<CreateOrUpdateUserCustomFieldDTO> notFoundCustomField = user.getCustomFields()
                     .stream().filter(c -> userCustomFieldEntities.stream()
-                            .noneMatch(cf -> cf.getCustomField().getId() == c.getCustomFieldId())
+                            .noneMatch(cf -> cf.getCustomField().getId().compareTo(c.getCustomFieldId()) == 0)
                     )
                     .findFirst();
             if (notFoundCustomField.isPresent()) {
@@ -292,6 +295,7 @@ public class UserService {
 
         UserDTO userDto = UserEntityMapper.INSTANCE.convertUserEntityToUserModel(user.get());
         userDto.setAssignedRoles(MapperUtils.mapUserEntityToRoleList(user.get(), rolePermissionMappings));
+        userDto.setCustomFields(MapperUtils.mapUserEntityToCustomFieldDtoList(user.get()));
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(userDto);
     }
 
@@ -303,8 +307,7 @@ public class UserService {
      * @return a status code
      * @throws Exception if the provided json could not be serialized
      */
-    public ResponseEntity<Void> updateCustomField(UUID userId, CreateOrUpdateUserCustomFieldDTO userCustomField)
-            throws Exception {
+    public ResponseEntity<Void> updateCustomField(UUID userId, CreateOrUpdateUserCustomFieldDTO userCustomField) {
         Optional<UserEntity> user = userRepository.findById(userId);
         if (user.isEmpty()) {
             throw new ResourceNotFoundException("User not found!");
@@ -325,9 +328,14 @@ public class UserService {
                             .build());
         }
 
-        setUserCustomFieldValueFromCustomFieldDto(customField.get(), userCustomFieldEntity.get(), userCustomField);
-        userCustomFieldRepository.save(userCustomFieldEntity.get());
-        return ResponseEntity.ok().build();
+        try {
+            setUserCustomFieldValueFromCustomFieldDto(customField.get(), userCustomFieldEntity.get(), userCustomField);
+            userCustomFieldRepository.save(userCustomFieldEntity.get());
+            return ResponseEntity.ok().build();
+        } catch (Exception ex) {
+            log.error("Exception occurred in UserService.updateCustomField: {}", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
     }
 
     private void setUserCustomFieldValueFromCustomFieldDto(CustomFieldEntity customField,
@@ -348,7 +356,14 @@ public class UserService {
                 }
                 break;
             case DATETIME:
-                userCustomFieldEntity.setCustomFieldValueDateTime((OffsetDateTime)userCustomField.getValue());
+                if (userCustomField.getValue() != null) {
+                    userCustomFieldEntity.setCustomFieldValueDateTime(
+                            OffsetDateTime.parse(
+                                    userCustomField.getValue().toString(), DateTimeFormatter.ISO_DATE_TIME)
+                    );
+                } else {
+                    userCustomFieldEntity.setCustomFieldValueDateTime(null);
+                }
                 break;
             default:
             case STRING:
