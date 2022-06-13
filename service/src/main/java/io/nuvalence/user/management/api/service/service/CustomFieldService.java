@@ -26,7 +26,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -231,38 +230,14 @@ public class CustomFieldService {
             throw new BusinessLogicException("The custom field is not a drop-down type.");
         }
 
-        List<CustomFieldOptionEntity> existingCustomFieldOptions = customFieldOptionRepository
-                .findByCustomField(customFieldId);
-
         List<CustomFieldOptionEntity> optionEntities = options
                 .stream().map(o -> CustomFieldMapper.INSTANCE.convertOptionDtoToOptionEntity(o, customField.get()))
                 .collect(Collectors.toList());
 
-        customFieldOptionRepository.deleteAll(existingCustomFieldOptions);
+        customFieldOptionRepository.deleteAll(customField.get().getOptions());
         customFieldOptionRepository.saveAll(optionEntities);
 
         return ResponseEntity.ok().build();
-    }
-
-    private CustomFieldDTO mapCustomFieldEntityToCustomFieldDto(CustomFieldEntity entity) {
-        CustomFieldDTO customField = new CustomFieldDTO();
-        customField.setId(entity.getId());
-        customField.setName(entity.getName());
-        customField.setDisplayText(entity.getDisplayText());
-        customField.setDataType(CustomFieldDTO.DataTypeEnum.fromValue(entity.getDataType().getType()));
-        customField.setType(CustomFieldDTO.TypeEnum.fromValue(entity.getType().getType()));
-
-        if (isDropDownListType(entity)
-                && entity.getOptions() != null
-                && !entity.getOptions().isEmpty()) {
-            List<CustomFieldOptionDTO> options = entity.getOptions()
-                    .stream().map(CustomFieldMapper.INSTANCE::convertOptionEntityToOptionDto)
-                    .sorted(Comparator.comparing(CustomFieldOptionDTO::getDisplayText))
-                    .collect(Collectors.toList());
-            customField.setOptions(options);
-        }
-
-        return customField;
     }
 
     private boolean isDropDownListType(CustomFieldEntity customField) {

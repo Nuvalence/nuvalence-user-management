@@ -3,6 +3,7 @@ package io.nuvalence.user.management.api.service.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.nuvalence.user.management.api.service.entity.RoleEntity;
 import io.nuvalence.user.management.api.service.entity.UserEntity;
+import io.nuvalence.user.management.api.service.generated.models.CreateOrUpdateUserCustomFieldDTO;
 import io.nuvalence.user.management.api.service.generated.models.RoleDTO;
 import io.nuvalence.user.management.api.service.generated.models.UserCreationRequest;
 import io.nuvalence.user.management.api.service.generated.models.UserDTO;
@@ -30,6 +31,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -160,6 +162,20 @@ public class UserApiDelegateImplTest {
         ).andExpect(status().isOk());
     }
 
+    @Test
+    public void updateUserCustomFieldValue() throws Exception {
+        CreateOrUpdateUserCustomFieldDTO customField = createMockUserCustomFieldDto();
+        ResponseEntity<Void> res = ResponseEntity.ok().build();
+        when(userService.updateCustomField(any(), any())).thenReturn(res);
+        final String putBody = new ObjectMapper().writeValueAsString(customField);
+
+        mockMvc.perform(
+                put("/api/v2/user/" + UUID.randomUUID() + "/custom-field")
+                        .content(putBody)
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().isOk());
+    }
+
     private UserDTO createUserModel() {
         UserDTO user = new UserDTO();
         user.setId(UUID.randomUUID());
@@ -202,6 +218,13 @@ public class UserApiDelegateImplTest {
         userRole.setRoleId(role.getId());
         userRole.setUserId(user.getId());
         return userRole;
+    }
+
+    private CreateOrUpdateUserCustomFieldDTO createMockUserCustomFieldDto() {
+        CreateOrUpdateUserCustomFieldDTO customField = new CreateOrUpdateUserCustomFieldDTO();
+        customField.setCustomFieldId(UUID.randomUUID());
+        customField.setValue("OPTION_1");
+        return customField;
     }
 
 }
