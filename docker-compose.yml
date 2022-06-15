@@ -49,6 +49,10 @@ services:
       - userapipostgres
     networks:
       - user-api
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/root/gcloud/application_default_credentials.json
+    volumes:
+      - ${CLOUDSDK_CONFIG}:/root/gcloud
 
 networks:
   user-api: {}
