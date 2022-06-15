@@ -1,29 +1,39 @@
 package io.nuvalence.user.management.api.service.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.nuvalence.user.management.api.service.cerbos.CerbosClient;
 import io.nuvalence.user.management.api.service.config.exception.BusinessLogicException;
 import io.nuvalence.user.management.api.service.config.exception.ResourceNotFoundException;
+import io.nuvalence.user.management.api.service.entity.CustomFieldEntity;
 import io.nuvalence.user.management.api.service.entity.RoleEntity;
+import io.nuvalence.user.management.api.service.entity.UserCustomFieldEntity;
 import io.nuvalence.user.management.api.service.entity.UserEntity;
 import io.nuvalence.user.management.api.service.entity.UserRoleEntity;
+import io.nuvalence.user.management.api.service.enums.CustomFieldDataType;
+import io.nuvalence.user.management.api.service.generated.models.CreateOrUpdateUserCustomFieldDTO;
 import io.nuvalence.user.management.api.service.generated.models.RoleDTO;
 import io.nuvalence.user.management.api.service.generated.models.UserCreationRequest;
 import io.nuvalence.user.management.api.service.generated.models.UserDTO;
 import io.nuvalence.user.management.api.service.generated.models.UserRoleDTO;
 import io.nuvalence.user.management.api.service.mapper.MapperUtils;
 import io.nuvalence.user.management.api.service.mapper.UserEntityMapper;
+import io.nuvalence.user.management.api.service.repository.CustomFieldRepository;
 import io.nuvalence.user.management.api.service.repository.RoleRepository;
+import io.nuvalence.user.management.api.service.repository.UserCustomFieldRepository;
 import io.nuvalence.user.management.api.service.repository.UserRepository;
 import io.nuvalence.user.management.api.service.repository.UserRoleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -39,10 +49,13 @@ import javax.transaction.Transactional;
 @Transactional
 @RequiredArgsConstructor
 @Slf4j
+@SuppressWarnings("checkstyle:ClassFanOutComplexity")
 public class UserService {
 
     private final UserRepository userRepository;
     private final UserRoleRepository userRoleRepository;
+    private final CustomFieldRepository customFieldRepository;
+    private final UserCustomFieldRepository userCustomFieldRepository;
     private final RoleRepository roleRepository;
     private final CerbosClient client;
 
@@ -70,22 +83,58 @@ public class UserService {
         UserEntity savedUser = userRepository.save(userEntity);
 
         // If roles are provided we want to initialize them here.
-        if (!user.getInitialRoles().isEmpty()) {
-            List<RoleEntity> roleEntities = user.getInitialRoles().stream().map(role -> {
-                RoleEntity roleEntity = roleRepository.getById(role.getId());
-                if (roleEntity == null) {
-                    throw new BusinessLogicException(String.format("No role found for %s.", role.getRoleName()));
-                }
-                return roleEntity;
-            }).collect(Collectors.toList());
+        if (user.getInitialRoles() != null && !user.getInitialRoles().isEmpty()) {
+            List<UserRoleEntity> userRoleEntities = roleRepository.findAllById(user.getInitialRoles()
+                    .stream().map(RoleDTO::getId).collect(Collectors.toList()))
+                    .stream().map(r -> {
+                        UserRoleEntity userRoleEntity = new UserRoleEntity();
+                        userRoleEntity.setUser(savedUser);
+                        userRoleEntity.setRole(r);
+                        return userRoleEntity;
+                    }).collect(Collectors.toList());
+            Optional<RoleDTO> notFoundRole = user.getInitialRoles()
+                    .stream().filter(r -> userRoleEntities.stream().noneMatch(re ->
+                            re.getRole().getId().compareTo(r.getId()) == 0))
+                    .findFirst();
+            if (notFoundRole.isPresent()) {
+                throw new BusinessLogicException(
+                        String.format("No role found for %s.", notFoundRole.get().getRoleName())
+                );
+            }
+            userRoleRepository.saveAll(userRoleEntities);
+        }
 
-
-            roleEntities.forEach(role -> {
-                UserRoleEntity userRoleEntity = new UserRoleEntity();
-                userRoleEntity.setUser(savedUser);
-                userRoleEntity.setRole(role);
-                userRoleRepository.save(userRoleEntity);
-            });
+        if (user.getCustomFields() != null && !user.getCustomFields().isEmpty()) {
+            Map<UUID, CreateOrUpdateUserCustomFieldDTO> userCustomFields = user.getCustomFields()
+                    .stream().collect(Collectors.toMap(CreateOrUpdateUserCustomFieldDTO::getCustomFieldId, c -> c));
+            List<UserCustomFieldEntity> userCustomFieldEntities = customFieldRepository
+                    .findAllById(user.getCustomFields()
+                    .stream().map(CreateOrUpdateUserCustomFieldDTO::getCustomFieldId).collect(Collectors.toList()))
+                    .stream().map(c -> {
+                        UserCustomFieldEntity userCustomField = UserCustomFieldEntity.builder()
+                                .user(savedUser)
+                                .customField(c)
+                                .build();
+                        try {
+                            setUserCustomFieldValueFromCustomFieldDto(c, userCustomField,
+                                    userCustomFields.get(c.getId()));
+                        } catch (Exception e) {
+                            log.error("Exception occurred at UserService.createUser: {}", e.getMessage());
+                        }
+                        return userCustomField;
+                    }).collect(Collectors.toList());
+            Optional<CreateOrUpdateUserCustomFieldDTO> notFoundCustomField = user.getCustomFields()
+                    .stream().filter(c -> userCustomFieldEntities.stream()
+                            .noneMatch(cf -> cf.getCustomField().getId().compareTo(c.getCustomFieldId()) == 0)
+                    )
+                    .findFirst();
+            if (notFoundCustomField.isPresent()) {
+                throw new BusinessLogicException(
+                        String.format("No custom field found with id: %s.",
+                                notFoundCustomField.get().getCustomFieldId())
+                );
+            }
+            userCustomFieldRepository.saveAll(userCustomFieldEntities);
         }
 
         return ResponseEntity.status(200).build();
@@ -99,11 +148,13 @@ public class UserService {
      */
     public ResponseEntity<Void> deleteUser(UUID userId) {
         List<UserRoleEntity> userRoleEntities = userRoleRepository.findAllByUserId(userId);
+        List<UserCustomFieldEntity> userCustomFieldEntities = userCustomFieldRepository.findAllByUserId(userId);
         Optional<UserEntity> userEntity = userRepository.findById(userId);
 
         if (userEntity.isEmpty()) {
             throw new ResourceNotFoundException("User not found.");
         }
+        userCustomFieldRepository.deleteAll(userCustomFieldEntities);
         userRoleRepository.deleteAll(userRoleEntities);
         userRepository.delete(userEntity.get());
 
@@ -221,6 +272,7 @@ public class UserService {
 
         UserDTO user = UserEntityMapper.INSTANCE.convertUserEntityToUserModel(userEntity.get());
         user.setAssignedRoles(MapperUtils.mapUserEntityToRoleList(userEntity.get(), rolePermissionMappings));
+        user.setCustomFields(MapperUtils.mapUserEntityToCustomFieldDtoList(userEntity.get()));
 
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(user);
     }
@@ -243,6 +295,80 @@ public class UserService {
 
         UserDTO userDto = UserEntityMapper.INSTANCE.convertUserEntityToUserModel(user.get());
         userDto.setAssignedRoles(MapperUtils.mapUserEntityToRoleList(user.get(), rolePermissionMappings));
+        userDto.setCustomFields(MapperUtils.mapUserEntityToCustomFieldDtoList(user.get()));
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(userDto);
+    }
+
+    /**
+     * Updates (or creates if it doesn't already exist) a custom field with the provided value.
+     *
+     * @param userId the id of the user.
+     * @param userCustomField is a DTO of the user custom field to be updated/created.
+     * @return a status code
+     * @throws Exception if the provided json could not be serialized
+     */
+    public ResponseEntity<Void> updateCustomField(UUID userId, CreateOrUpdateUserCustomFieldDTO userCustomField) {
+        Optional<UserEntity> user = userRepository.findById(userId);
+        if (user.isEmpty()) {
+            throw new ResourceNotFoundException("User not found!");
+        }
+
+        Optional<CustomFieldEntity> customField = customFieldRepository.findById(userCustomField.getCustomFieldId());
+        if (customField.isEmpty()) {
+            throw new ResourceNotFoundException("Custom field not found!");
+        }
+
+        Optional<UserCustomFieldEntity> userCustomFieldEntity = userCustomFieldRepository
+                .findFirstByUserAndCustomField(userId, userCustomField.getCustomFieldId());
+
+        if (userCustomFieldEntity.isEmpty()) {
+            userCustomFieldEntity = Optional.of(UserCustomFieldEntity.builder()
+                            .user(user.get())
+                            .customField(customField.get())
+                            .build());
+        }
+
+        try {
+            setUserCustomFieldValueFromCustomFieldDto(customField.get(), userCustomFieldEntity.get(), userCustomField);
+            userCustomFieldRepository.save(userCustomFieldEntity.get());
+            return ResponseEntity.ok().build();
+        } catch (Exception ex) {
+            log.error("Exception occurred in UserService.updateCustomField: {}", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }
+
+    private void setUserCustomFieldValueFromCustomFieldDto(CustomFieldEntity customField,
+                                                           UserCustomFieldEntity userCustomFieldEntity,
+                                                           CreateOrUpdateUserCustomFieldDTO userCustomField)
+            throws Exception {
+        switch (CustomFieldDataType.fromText(customField.getDataType().getType())) {
+            case INT:
+                userCustomFieldEntity.setCustomFieldValueInt((Integer)userCustomField.getValue());
+                break;
+            case JSON:
+                if (userCustomField.getValue() != null) {
+                    userCustomFieldEntity.setCustomFieldValueJson(
+                            new ObjectMapper().writeValueAsString(userCustomField.getValue())
+                    );
+                } else {
+                    userCustomFieldEntity.setCustomFieldValueJson(null);
+                }
+                break;
+            case DATETIME:
+                if (userCustomField.getValue() != null) {
+                    userCustomFieldEntity.setCustomFieldValueDateTime(
+                            OffsetDateTime.parse(
+                                    userCustomField.getValue().toString(), DateTimeFormatter.ISO_DATE_TIME)
+                    );
+                } else {
+                    userCustomFieldEntity.setCustomFieldValueDateTime(null);
+                }
+                break;
+            default:
+            case STRING:
+                userCustomFieldEntity.setCustomFieldValueString((String)userCustomField.getValue());
+                break;
+        }
     }
 }

@@ -59,6 +59,32 @@ paths:
           description: "You are unauthorized to make this request"
         "404":
           description: "User not found"
+  /user/{id}/custom-field:
+    put:
+      tags:
+        - "user"
+      summary: "Sets the value of a custom field with the provided value."
+      operationId: "updateUserCustomFieldValue"
+      parameters:
+        - name: "id"
+          in: "path"
+          description: "id of the user to update the custom field for."
+          required: true
+          type: "string"
+          format: uuid
+        - name: body
+          in: body
+          description: "custom field object"
+          required: true
+          schema:
+            $ref: "#/definitions/CreateOrUpdateUserCustomFieldDTO"
+      responses:
+        "200":
+          description: "successful operation"
+        "401":
+          description: "You are unauthorized to make this request"
+        "404":
+          description: "User not found"
   /user/email/{email}:
     get:
       tags:
@@ -445,6 +471,152 @@ paths:
             items:
               $ref: "#/definitions/LanguageDTO"
 
+  /custom-fields:
+    get:
+      tags:
+        - "custom-fields"
+      summary: "Returns all custom fields."
+      operationId: "getAllCustomFields"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/CustomFieldDTO"
+        "401":
+          description: "You are unauthorized to make this request"
+        "404":
+          description: "Custom fields not found"
+    post:
+      tags:
+        - "custom-fields"
+      summary: "Creates a new custom field."
+      operationId: "addCustomField"
+      parameters:
+        - name: body
+          in: body
+          description: "custom field object"
+          required: true
+          schema:
+            $ref: "#/definitions/CreateCustomFieldDTO"
+      responses:
+        "200":
+          description: "successful operation"
+        "401":
+          description: "You are unauthorized to make this request"
+  /custom-fields/{id}:
+    get:
+      tags:
+        - "custom-fields"
+      summary: "Gets a custom field."
+      operationId: "getCustomFieldById"
+      parameters:
+        - name: "id"
+          in: path
+          description: "ID for custom field to update."
+          type: "string"
+          required: true
+          format: uuid
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/CustomFieldDTO"
+        "401":
+          description: "You are unauthorized to make this request"
+    put:
+      tags:
+        - "custom-fields"
+      summary: "Updates an existing custom field."
+      operationId: "updateCustomField"
+      parameters:
+        - name: "id"
+          in: path
+          description: "ID for custom field to update."
+          type: "string"
+          required: true
+          format: uuid
+        - name: body
+          in: body
+          description: "custom field object"
+          required: true
+          schema:
+            $ref: "#/definitions/UpdateCustomFieldDTO"
+      responses:
+        "200":
+          description: "successful operation"
+        "401":
+          description: "You are unauthorized to make this request"
+    delete:
+      tags:
+        - "custom-fields"
+      summary: "Deletes an existing custom field."
+      operationId: "deleteCustomField"
+      parameters:
+        - name: "id"
+          in: path
+          description: "ID for custom field to delete."
+          type: "string"
+          required: true
+          format: uuid
+      responses:
+        "200":
+          description: "successful operation"
+        "401":
+          description: "You are unauthorized to make this request"
+  /custom-fields/{id}/options:
+    get:
+      tags:
+        - "custom-fields"
+      summary: "Gets the options for a custom field."
+      operationId: "getOptionsForCustomField"
+      parameters:
+        - name: "id"
+          in: path
+          description: "ID for the custom field to find options of."
+          type: "string"
+          required: true
+          format: uuid
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/CustomFieldOptionDTO"
+        "401":
+          description: "You are unauthorized to make this request"
+        "404":
+          description: "Custom field not found"
+    put:
+      tags:
+        - "custom-fields"
+      summary: "Updates the list of options for a custom field."
+      operationId: "updateCustomFieldOptions"
+      parameters:
+        - name: "id"
+          in: path
+          description: "ID for the custom field to find options of."
+          type: "string"
+          required: true
+          format: uuid
+        - name: body
+          in: body
+          description: "custom field object"
+          required: true
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/CreateOrUpdateCustomFieldOptionDTO"
+      responses:
+        "200":
+          description: "successful operation"
+        "401":
+          description: "You are unauthorized to make this request"
+        "404":
+          description: "Custom field not found"
+
   /validate/user-permission:
     get:
       tags:
@@ -476,6 +648,18 @@ paths:
           description: "You are not authorized to make this request"
 
 definitions:
+  CustomFieldDataType:
+    type: string
+    enum: &CUSTOM_FIELD_DATA_TYPE
+      - string
+      - int
+      - json
+      - datetime
+  CustomFieldType:
+    type: string
+    enum: &CUSTOM_FIELD_TYPE
+      - drop_down_list
+      - text_field
   AllRoles:
     type: array
     items:
@@ -512,6 +696,10 @@ definitions:
       preferences:
         type: object
         $ref: '#/definitions/UserPreferenceDTO'
+      customFields:
+        type: array
+        items:
+          $ref: '#/definitions/UserCustomFieldDTO'
   RoleDTO:
     type: object
     required:
@@ -575,6 +763,10 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/RoleDTO'
+      customFields:
+        type: array
+        items:
+          $ref: '#/definitions/CreateOrUpdateUserCustomFieldDTO'
   ValidatePermissionDTO:
     type: object
     required:
@@ -594,3 +786,114 @@ definitions:
       languageStandardId:
         type: string
         example: "en"
+  CustomFieldOptionDTO:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+      optionValue:
+        type: string
+      displayText:
+        type: string
+  CreateOrUpdateCustomFieldOptionDTO:
+    type: object
+    required:
+      - optionValue
+      - displayText
+    properties:
+      optionValue:
+        type: string
+      displayText:
+        type: string
+  CustomFieldDTO:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+      name:
+        type: string
+      displayText:
+        type: string
+      type:
+        type: string
+        enum: *CUSTOM_FIELD_TYPE
+      dataType:
+        type: string
+        enum: *CUSTOM_FIELD_DATA_TYPE
+      options:
+        type: array
+        items:
+          $ref: "#/definitions/CustomFieldOptionDTO"
+  UpdateCustomFieldDTO:
+    type: object
+    required:
+      - name
+      - displayText
+    properties:
+      name:
+        type: string
+      displayText:
+        type: string
+      options:
+        type: array
+        items:
+          $ref: "#/definitions/CreateOrUpdateCustomFieldOptionDTO"
+  CreateCustomFieldDTO:
+    type: object
+    required:
+      - name
+      - displayText
+      - type
+      - dataType
+    properties:
+      name:
+        type: string
+      displayText:
+        type: string
+      type:
+        type: string
+        enum: *CUSTOM_FIELD_TYPE
+      dataType:
+        type: string
+        enum: *CUSTOM_FIELD_DATA_TYPE
+      options:
+        type: array
+        items:
+          $ref: "#/definitions/CreateOrUpdateCustomFieldOptionDTO"
+  CreateOrUpdateUserCustomFieldDTO:
+    type: object
+    required:
+      - customFieldId
+    properties:
+      customFieldId:
+        type: string
+        format: uuid
+      value:
+        type: object
+  UserCustomFieldDTO:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+      customFieldId:
+        type: string
+        format: uuid
+      type:
+        type: string
+        enum: *CUSTOM_FIELD_TYPE
+      dataType:
+        type: string
+        enum: *CUSTOM_FIELD_DATA_TYPE
+      name:
+        type: string
+      displayText:
+        type: string
+      value:
+        type: object
+      options:
+        type: array
+        items:
+          $ref: "#/definitions/CustomFieldOptionDTO"

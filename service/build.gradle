@@ -30,6 +30,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	implementation 'com.vladmihalcea:hibernate-types-52:2.16.1'
 
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
@@ -51,6 +52,8 @@ dockerCompose {
 	dockerComposeWorkingDirectory = project.file(project.getRootDir().toString())
 	tcpPortsToIgnoreWhenWaiting = [5439]
 }
+
+composeUp.dependsOn build
 
 test {
 	useJUnitPlatform()

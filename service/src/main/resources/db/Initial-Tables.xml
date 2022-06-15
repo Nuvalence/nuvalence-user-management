@@ -197,4 +197,118 @@
                     ('edcb5992-2788-4042-b125-38b145c1e830', '551e4105-0a7e-40a0-a9b6-7dc3a504d561', 'c95afee7-2bc4-4c12-acdd-344b5432520e');
         </sql>
     </changeSet>
+    <changeSet id="custom-fields-introduction" author="open-source-initial-author">
+        <createTable tableName="custom_field_type">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true"
+                             primaryKeyName="pk_custom_field_type"
+                             nullable="false"/>
+            </column>
+            <column name="type" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="custom_field_type" indexName="IX_custom_field_type_type">
+            <column name="type" />
+        </createIndex>
+        <createTable tableName="custom_field_data_type">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true"
+                             primaryKeyName="pk_custom_field_data_type"
+                             nullable="false"/>
+            </column>
+            <column name="type" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="custom_field_data_type" indexName="IX_custom_field_data_type_type">
+            <column name="type" />
+        </createIndex>
+        <createTable tableName="custom_field">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true"
+                             primaryKeyName="pk_custom_field"
+                             nullable="false"/>
+            </column>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false" unique="true" />
+            </column>
+            <column name="custom_field_type_id" type="uuid">
+                <constraints foreignKeyName="fk_custom_field_custom_field_type"
+                             references="custom_field_type(id)"
+                             nullable="false"/>
+            </column>
+            <column name="custom_field_data_type_id" type="uuid">
+                <constraints foreignKeyName="fk_custom_field_data_type"
+                             references="custom_field_data_type(id)"
+                             nullable="false"/>
+            </column>
+            <column name="display_text" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="custom_field" indexName="IX_custom_field_name">
+            <column name="name" />
+        </createIndex>
+        <createTable tableName="custom_field_option">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true"
+                             primaryKeyName="pk_custom_field_option"
+                             nullable="false"/>
+            </column>
+            <column name="custom_field_id" type="uuid">
+                <constraints foreignKeyName="fk_custom_field_option_custom_field"
+                             references="custom_field(id)"
+                             nullable="false"/>
+            </column>
+            <column name="option_value" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="display_text" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="user_custom_field">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true"
+                             primaryKeyName="pk_user_custom_field"
+                             nullable="false"/>
+            </column>
+            <column name="user_id" type="uuid">
+                <constraints foreignKeyName="fk_user_custom_field_user"
+                             references="user_table(id)"
+                             nullable="false"/>
+            </column>
+            <column name="custom_field_id" type="uuid">
+                <constraints foreignKeyName="fk_user_custom_field_custom_field"
+                             references="custom_field(id)"
+                             nullable="false"/>
+            </column>
+            <column name="custom_field_value_string" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="custom_field_value_int" type="int">
+                <constraints nullable="true"/>
+            </column>
+            <column name="custom_field_value_json" type="JSONB">
+                <constraints nullable="true"/>
+            </column>
+            <column name="custom_field_value_datetime" type="datetime">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="user_custom_field" columnNames="user_id, custom_field_id" constraintName="Unique_CustomField_To_User" />
+        <sql>
+            INSERT INTO custom_field_type (id, type)
+            VALUES ('a80a48b5-2995-4c54-9bd5-ebc258fab4ba', 'drop_down_list'),
+                   ('5fc38fee-e8f5-11ec-8fea-0242ac120002', 'text_field');
+        </sql>
+        <sql>
+            INSERT INTO custom_field_data_type (id, type)
+            VALUES ('3e724ddf-4d09-452b-ae98-a8e3a76af19c', 'string'),
+                   ('7c6e4de3-5461-4a38-bdf8-2f853c50e3a3', 'int'),
+                   ('69af3a92-b6d6-4b6a-90e5-51304cba887c', 'json'),
+                   ('5d01d9e3-f8a8-42e3-877c-b743bff79e7f', 'datetime');
+        </sql>
+    </changeSet>
 </databaseChangeLog>

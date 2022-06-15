@@ -1,10 +1,16 @@
 package io.nuvalence.user.management.api.service.mapper;
 
 import io.nuvalence.user.management.api.service.entity.ApplicationPreferenceEntity;
+import io.nuvalence.user.management.api.service.entity.CustomFieldDataTypeEntity;
+import io.nuvalence.user.management.api.service.entity.CustomFieldEntity;
+import io.nuvalence.user.management.api.service.entity.CustomFieldOptionEntity;
+import io.nuvalence.user.management.api.service.entity.CustomFieldTypeEntity;
 import io.nuvalence.user.management.api.service.entity.LanguageEntity;
 import io.nuvalence.user.management.api.service.entity.RoleEntity;
+import io.nuvalence.user.management.api.service.entity.UserCustomFieldEntity;
 import io.nuvalence.user.management.api.service.entity.UserPreferenceEntity;
 import io.nuvalence.user.management.api.service.generated.models.RoleDTO;
+import io.nuvalence.user.management.api.service.generated.models.UserCustomFieldDTO;
 import io.nuvalence.user.management.api.service.generated.models.UserPreferenceDTO;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -103,5 +109,45 @@ public class MapperUtilsTest {
         UserPreferenceDTO result = MapperUtils.overlapPreferences(preference, applicationPreferences);
 
         assertEquals(expected, result);
+    }
+
+    @Test
+    public void shouldMapUserCustomFieldEntityToDto() {
+        CustomFieldOptionEntity option = new CustomFieldOptionEntity();
+        option.setId(UUID.randomUUID());
+        option.setOptionValue("VALUE_1");
+        option.setDisplayText("Value 1");
+
+        CustomFieldEntity customFieldEntity = new CustomFieldEntity();
+        customFieldEntity.setId(UUID.randomUUID());
+        customFieldEntity.setName("CUSTOM_FIELD_1");
+        CustomFieldTypeEntity customFieldTypeEntity = new CustomFieldTypeEntity();
+        customFieldTypeEntity.setId(UUID.fromString("a80a48b5-2995-4c54-9bd5-ebc258fab4ba"));
+        customFieldTypeEntity.setType("drop_down_list");
+        customFieldEntity.setType(customFieldTypeEntity);
+        CustomFieldDataTypeEntity customFieldDataTypeEntity = new CustomFieldDataTypeEntity();
+        customFieldDataTypeEntity.setId(UUID.fromString("3e724ddf-4d09-452b-ae98-a8e3a76af19c"));
+        customFieldDataTypeEntity.setType("string");
+        customFieldEntity.setDataType(customFieldDataTypeEntity);
+        customFieldEntity.setDisplayText("Custom Field 1");
+        customFieldEntity.setOptions(List.of(option));
+
+        UserCustomFieldEntity userCustomFieldEntity = new UserCustomFieldEntity();
+        userCustomFieldEntity.setId(UUID.randomUUID());
+        userCustomFieldEntity.setCustomField(customFieldEntity);
+        userCustomFieldEntity.setCustomFieldValueString("TEST1");
+
+        UserCustomFieldDTO userCustomFieldModel = MapperUtils.mapUserCustomFieldEntityToDto(userCustomFieldEntity);
+        assertEquals(userCustomFieldModel.getId(), userCustomFieldEntity.getId());
+        assertEquals(userCustomFieldModel.getCustomFieldId(), userCustomFieldEntity.getCustomField().getId());
+        assertEquals(userCustomFieldModel.getType().getValue(),
+                userCustomFieldEntity.getCustomField().getType().getType());
+        assertEquals(userCustomFieldModel.getDataType().getValue(),
+                userCustomFieldEntity.getCustomField().getDataType().getType());
+        assertEquals(userCustomFieldModel.getName(), userCustomFieldEntity.getCustomField().getName());
+        assertEquals(userCustomFieldModel.getDisplayText(), userCustomFieldEntity.getCustomField().getDisplayText());
+        assertEquals(userCustomFieldModel.getValue(), "TEST1");
+        assertEquals(userCustomFieldModel.getOptions().get(0).getOptionValue(),
+                userCustomFieldEntity.getCustomField().getOptions().get(0).getOptionValue());
     }
 }

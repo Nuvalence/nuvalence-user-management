@@ -24,6 +24,7 @@ public interface UserEntityMapper {
      */
     @Mapping(target = "preferences", ignore = true)
     @Mapping(target = "assignedRoles", ignore = true)
+    @Mapping(target = "customFields", ignore = true)
     UserDTO convertUserEntityToUserModel(UserEntity userEntity);
 
     /**
@@ -35,6 +36,7 @@ public interface UserEntityMapper {
      */
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "userRoleEntities", ignore = true)
+    @Mapping(target = "customFields", ignore = true)
     UserEntity convertUserModelToUserEntity(UserDTO user);
 
     /**
@@ -46,5 +48,7 @@ public interface UserEntityMapper {
      */
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "userRoleEntities", ignore = true)
+    @Mapping(target = "customFields", ignore = true)
+    @Mapping(target = "id", ignore = true)
     UserEntity convertUserCreationRequestToUserEntity(UserCreationRequest user);
 }
