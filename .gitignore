@@ -37,6 +37,7 @@ gradle-app.setting
 *.zip
 *.tar.gz
 *.rar
+*.env
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
@@ -55,3 +56,6 @@ service/bin/
 
 # Ignore DevSpace cache and log folder
 .devspace/
+
+## private key
+privateKey.json
