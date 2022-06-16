@@ -19,6 +19,7 @@ import io.nuvalence.user.management.api.service.generated.models.UserCreationReq
 import io.nuvalence.user.management.api.service.generated.models.UserCustomFieldDTO;
 import io.nuvalence.user.management.api.service.generated.models.UserDTO;
 import io.nuvalence.user.management.api.service.generated.models.UserRoleDTO;
+import io.nuvalence.user.management.api.service.generated.models.UserUpdateRequest;
 import io.nuvalence.user.management.api.service.mapper.MapperUtils;
 import io.nuvalence.user.management.api.service.repository.CustomFieldRepository;
 import io.nuvalence.user.management.api.service.repository.RoleRepository;
@@ -46,11 +47,13 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.isA;
+import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
 
 @ExtendWith(MockitoExtension.class)
 @SuppressWarnings({"checkstyle:ClassFanOutComplexity", "checkstyle:ClassDataAbstractionCoupling"})
@@ -194,6 +197,224 @@ public class UserServiceTest {
         });
         assertTrue(exception.getMessage().contains("No custom field found with id: "
                 + customField.getCustomFieldId().toString()));
+    }
+
+    // Update user tests.
+    @Test
+    public void updateUser_fully_updates_a_user() {
+        // Create a user and make sure the user repository responds with it
+        UserEntity originalUserEntity = createUserEntity();
+        when(userRepository.findById(originalUserEntity.getId())).thenAnswer(x -> Optional.of(createUserEntity()));
+
+        // Set up the new values, update request, and expected new entity
+        final String newName = "John Locke II";
+        final String newEmail = "Skipper@theisland.net";
+        final String newExternalId = "TestExternalId123456789";
+        UserUpdateRequest updateRequest = new UserUpdateRequest();
+        updateRequest.setDisplayName(newName);
+        updateRequest.setEmail(newEmail);
+        updateRequest.setExternalId(newExternalId);
+        UserEntity newUserEntity = createUserEntity();
+        newUserEntity.setDisplayName(newName);
+        newUserEntity.setEmail(newEmail);
+        newUserEntity.setExternalId(newExternalId);
+
+        // Fake the UserEntity return when save is called in the userService.updateUser(...) function
+        when(userRepository.save(isA(UserEntity.class))).thenReturn(newUserEntity);
+
+        // Make the update request
+        ResponseEntity<UserDTO> res = userService.updateUserById(originalUserEntity.getId(), updateRequest);
+        assertEquals(res.getStatusCode(), HttpStatus.OK);
+        verify(userRepository).save(userCaptor.capture()); // userRepository should have been asked to save once
+        UserEntity savedEntity = userCaptor.getValue(); // Capture what it was sent to save
+
+        // Validate that the UserEntity submitted to userRepository.save and the returned UserDTO are correct
+        validateUserUpdate(originalUserEntity, updateRequest, savedEntity, res.getBody());
+    }
+
+    @Test
+    public void updateUser_partially_updates_a_user() {
+        // Create a user and make sure the user repository responds with it
+        UserEntity originalUserEntity = createUserEntity();
+        when(userRepository.findById(originalUserEntity.getId())).thenAnswer(x -> Optional.of(createUserEntity()));
+
+        // Set up the new values and utility objects
+        final String newName = "John Locke II";
+        final String newEmail = "Skipper@theisland.net";
+        final String newExternalId = "TestExternalId123456789";
+        UserUpdateRequest updateRequest = new UserUpdateRequest();
+        UserEntity expectedUserEntity = createUserEntity();
+
+        // Test changing only the user's display name
+        updateRequest.setDisplayName(newName);
+        expectedUserEntity.setDisplayName(newName);
+        when(userRepository.save(isA(UserEntity.class))).thenReturn(expectedUserEntity);
+        ResponseEntity<UserDTO> res = userService.updateUserById(originalUserEntity.getId(), updateRequest);
+        assertEquals(res.getStatusCode(), HttpStatus.OK);
+        verify(userRepository, times(1)).save(userCaptor.capture());
+        UserEntity savedEntity = userCaptor.getValue();
+        validateUserUpdate(originalUserEntity, updateRequest, savedEntity, res.getBody());
+        expectedUserEntity.setDisplayName(originalUserEntity.getDisplayName()); // Reset for next test
+
+        // Test changing only the user's email
+        updateRequest = new UserUpdateRequest(); // Clear out old changes requested
+        updateRequest.setEmail(newEmail);
+        expectedUserEntity.setEmail(newEmail); // User repo return is automatically updated via reference
+        res = userService.updateUserById(originalUserEntity.getId(), updateRequest);
+        assertEquals(res.getStatusCode(), HttpStatus.OK);
+        verify(userRepository, times(2)).save(userCaptor.capture()); // 2x now
+        savedEntity = userCaptor.getValue();
+        validateUserUpdate(originalUserEntity, updateRequest, savedEntity, res.getBody());
+        expectedUserEntity.setEmail(originalUserEntity.getEmail()); // Reset for next test
+
+        // Test changing only the user's external id
+        updateRequest = new UserUpdateRequest(); // Clear out old changes requested
+        updateRequest.setExternalId(newExternalId);
+        expectedUserEntity.setExternalId(newExternalId); // User repo return is automatically updated via reference
+        res = userService.updateUserById(originalUserEntity.getId(), updateRequest);
+        assertEquals(res.getStatusCode(), HttpStatus.OK);
+        verify(userRepository, times(3)).save(userCaptor.capture()); // 3x now
+        savedEntity = userCaptor.getValue();
+        validateUserUpdate(originalUserEntity, updateRequest, savedEntity, res.getBody());
+
+        // Test submitting the existing email and external id, but a changed display name
+        updateRequest = new UserUpdateRequest(); // Clear out old changes requested
+        updateRequest.setDisplayName(newName);
+        updateRequest.setEmail(originalUserEntity.getEmail());
+        updateRequest.setExternalId(originalUserEntity.getExternalId());
+        expectedUserEntity.setDisplayName(newName); // User repo return is automatically updated via reference
+        expectedUserEntity.setEmail(originalUserEntity.getEmail());
+        expectedUserEntity.setExternalId(originalUserEntity.getExternalId());
+        res = userService.updateUserById(originalUserEntity.getId(), updateRequest);
+        assertEquals(res.getStatusCode(), HttpStatus.OK);
+        verify(userRepository, times(4)).save(userCaptor.capture()); // 4x now
+        savedEntity = userCaptor.getValue();
+        validateUserUpdate(originalUserEntity, updateRequest, savedEntity, res.getBody());
+    }
+
+    // A user should not be updated if any part of the request turns out to be invalid
+    // As an example, if both email and externalId are sent, but externalId is already assigned, update nothing
+    @Test
+    public void updateUser_does_not_partially_update_on_validation_failure() {
+        // Create a user and make sure the user repository responds with it
+        UserEntity originalUserEntity = createUserEntity();
+        when(userRepository.findById(originalUserEntity.getId())).thenAnswer(x -> Optional.of(createUserEntity()));
+
+        // Set up the new values and utility objects
+        final String newName = "John Locke II";
+        final String newEmail = "Skipper@theisland.net";
+        final String newExternalId = "TestExternalId123456789";
+        UserUpdateRequest updateRequest = new UserUpdateRequest();
+        updateRequest.setDisplayName(newName);
+        updateRequest.setEmail(newEmail);
+        updateRequest.setExternalId(newExternalId);
+        Throwable exception;
+
+        // Valid name and email, but invalid external ID
+        when(userRepository.findUserEntityByExternalId(updateRequest.getExternalId()))
+            .thenReturn(Optional.of(new UserEntity()));
+        exception = assertThrows(BusinessLogicException.class,
+            () -> userService.updateUserById(originalUserEntity.getId(), updateRequest));
+        assertEquals("This ExternalId is already assigned to a user.", exception.getMessage());
+        when(userRepository.findUserEntityByExternalId(updateRequest.getExternalId())).thenReturn(Optional.empty());
+
+        // Valid name and external ID, but invalid email
+        when(userRepository.findUserEntityByEmail(updateRequest.getEmail())).thenReturn(Optional.of(new UserEntity()));
+        exception = assertThrows(BusinessLogicException.class,
+            () -> userService.updateUserById(originalUserEntity.getId(), updateRequest));
+        assertEquals("This Email is already assigned to a user.", exception.getMessage());
+
+        // Make sure the user was never updated in the repository
+        verify(userRepository, times(0)).save(any());
+    }
+
+    // Makes sure that the request still succeeds (and doesn't affect anything) if no data is sent to update
+    @Test
+    public void updateUser_does_not_update_a_user() {
+        // Create a user and make sure the user repository responds with it
+        UserEntity originalUserEntity = createUserEntity();
+        when(userRepository.findById(originalUserEntity.getId())).thenAnswer(x -> Optional.of(createUserEntity()));
+
+        // Set up the empty update request and expected new entity
+        UserUpdateRequest updateRequest = new UserUpdateRequest();
+        UserEntity newUserEntity = createUserEntity();
+
+        // Fake the UserEntity return when save is called in the userService.updateUser(...) function
+        when(userRepository.save(isA(UserEntity.class))).thenReturn(newUserEntity);
+
+        // Make the update request
+        ResponseEntity<UserDTO> res = userService.updateUserById(originalUserEntity.getId(), updateRequest);
+        assertEquals(res.getStatusCode(), HttpStatus.OK);
+        verify(userRepository).save(userCaptor.capture()); // userRepository should have been asked to save once
+        UserEntity savedEntity = userCaptor.getValue(); // Capture what it was sent to save
+
+        // Validate that the UserEntity submitted to userRepository.save and the returned UserDTO are correct
+        validateUserUpdate(originalUserEntity, updateRequest, savedEntity, res.getBody());
+    }
+
+    @Test
+    public void updateUser_fails_ifUserDoesNotExist() {
+        // Create a user and make sure the user repository responds with it
+        UserEntity originalUserEntity = createUserEntity();
+        when(userRepository.findById(originalUserEntity.getId())).thenAnswer(x -> Optional.of(createUserEntity()));
+
+        // Set up the new values and utility objects
+        UserUpdateRequest updateRequest = new UserUpdateRequest();
+        Throwable exception;
+
+        // Valid name and email, but invalid external ID
+        when(userRepository.findById(originalUserEntity.getId())).thenReturn(Optional.empty());
+        exception = assertThrows(ResourceNotFoundException.class,
+            () -> userService.updateUserById(originalUserEntity.getId(), updateRequest));
+        assertEquals("User not found.", exception.getMessage());
+
+        // Make sure the user was never updated in the repository
+        verify(userRepository, times(0)).save(any());
+    }
+
+    @Test
+    public void updateUser_fails_ifExternalIdAlreadyAssigned() {
+        // Create a user and make sure the user repository responds with it
+        UserEntity originalUserEntity = createUserEntity();
+        when(userRepository.findById(originalUserEntity.getId())).thenAnswer(x -> Optional.of(createUserEntity()));
+
+        // Set up the new values and utility objects
+        final String newExternalId = "TestExternalId123456789";
+        UserUpdateRequest updateRequest = new UserUpdateRequest();
+        updateRequest.setExternalId(newExternalId);
+        Throwable exception;
+
+        // Run the invalid external ID test
+        when(userRepository.findUserEntityByExternalId(updateRequest.getExternalId()))
+            .thenReturn(Optional.of(new UserEntity()));
+        exception = assertThrows(BusinessLogicException.class,
+            () -> userService.updateUserById(originalUserEntity.getId(), updateRequest));
+        assertEquals("This ExternalId is already assigned to a user.", exception.getMessage());
+
+        // Make sure the user was never updated in the repository
+        verify(userRepository, times(0)).save(any());
+    }
+
+    @Test
+    public void updateUser_fails_ifEmailAlreadyAssigned() {
+        // Create a user and make sure the user repository responds with it
+        UserEntity originalUserEntity = createUserEntity();
+        when(userRepository.findById(originalUserEntity.getId())).thenAnswer(x -> Optional.of(createUserEntity()));
+
+        // Set up the new values and utility objects
+        final String newEmail = "Skipper@theisland.net";
+        UserUpdateRequest updateRequest = new UserUpdateRequest();
+        updateRequest.setEmail(newEmail);
+        Throwable exception;
+
+        // Run the invalid email test
+        when(userRepository.findUserEntityByEmail(updateRequest.getEmail())).thenReturn(Optional.of(new UserEntity()));
+        exception = assertThrows(BusinessLogicException.class,
+            () -> userService.updateUserById(originalUserEntity.getId(), updateRequest));
+        assertEquals("This Email is already assigned to a user.", exception.getMessage());
+
+        // Make sure the user was never updated in the repository
+        verify(userRepository, times(0)).save(any());
     }
 
     // Delete User Tests.
@@ -696,6 +917,61 @@ public class UserServiceTest {
         customFieldDataTypeEntity.setId(UUID.fromString("5d01d9e3-f8a8-42e3-877c-b743bff79e7f"));
         customFieldDataTypeEntity.setType("datetime");
         return customFieldDataTypeEntity;
+    }
+
+    /*** Helper function for use when validating that the update user function works as expected.
+     * Asserts should cause the test to fail, removing the need for any return value as success is expected.
+     *
+     * @param originalEntity a UserEntity object that contains the original values to be compared against
+     * @param updateRequest a UserUpdateRequest object that contains the values to confirm as changed
+     * @param newEntity a UserEntity object that will be tested against originalEntity and updateRequest for changes
+     * @param newDTO a UserDTO object that will be tested against originalEntity and updateRequest for changes
+     */
+    private void validateUserUpdate(
+        UserEntity originalEntity,
+        UserUpdateRequest updateRequest,
+        UserEntity newEntity,
+        UserDTO newDTO) {
+
+        // Check display name
+        if (updateRequest.getDisplayName() != null) {
+            // In update request, should be changed
+            assertEquals(updateRequest.getDisplayName(), newEntity.getDisplayName());
+            assertEquals(updateRequest.getDisplayName(), newDTO.getDisplayName());
+        } else {
+            // Not in update request, should match original
+            assertEquals(originalEntity.getDisplayName(), newEntity.getDisplayName());
+            assertEquals(originalEntity.getDisplayName(), newDTO.getDisplayName());
+        }
+
+        // Check email
+        if (updateRequest.getEmail() != null) {
+            // In update request, should be changed
+            assertEquals(updateRequest.getEmail(), newEntity.getEmail());
+            assertEquals(updateRequest.getEmail(), newDTO.getEmail());
+        } else {
+            // Not in update request, should match original
+            assertEquals(originalEntity.getEmail(), newEntity.getEmail());
+            assertEquals(originalEntity.getEmail(), newDTO.getEmail());
+        }
+
+        // Check external id
+        if (updateRequest.getExternalId() != null) {
+            // In update request, should be changed
+            assertEquals(updateRequest.getExternalId(), newEntity.getExternalId());
+            assertEquals(updateRequest.getExternalId(), newDTO.getExternalId());
+        } else {
+            // Not in update request, should match original
+            assertEquals(originalEntity.getExternalId(), newEntity.getExternalId());
+            assertEquals(originalEntity.getExternalId(), newDTO.getExternalId());
+        }
+
+        // Also validate that other parameters exist and are unchanged
+        assertEquals(newEntity.getId(), originalEntity.getId());
+        assertEquals(newDTO.getId(), originalEntity.getId());
+        assertNull(newDTO.getAssignedRoles());
+        assertNull(newEntity.getUserRoleEntities());
+        assertNull(newDTO.getPreferences());
     }
 
 }

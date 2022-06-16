@@ -15,6 +15,7 @@ import io.nuvalence.user.management.api.service.generated.models.RoleDTO;
 import io.nuvalence.user.management.api.service.generated.models.UserCreationRequest;
 import io.nuvalence.user.management.api.service.generated.models.UserDTO;
 import io.nuvalence.user.management.api.service.generated.models.UserRoleDTO;
+import io.nuvalence.user.management.api.service.generated.models.UserUpdateRequest;
 import io.nuvalence.user.management.api.service.mapper.MapperUtils;
 import io.nuvalence.user.management.api.service.mapper.UserEntityMapper;
 import io.nuvalence.user.management.api.service.repository.CustomFieldRepository;
@@ -142,6 +143,57 @@ public class UserService {
         }
 
         return ResponseEntity.status(200).build();
+    }
+
+    /**
+     * Updates a User Entity from a (partial) user model.
+     *
+     * @param userId is a user's userId
+     * @param updateRequest is a user update request with changes to be made
+     * @return the updated UserDTO object in a ResponseEntity
+     */
+    public ResponseEntity<UserDTO> updateUserById(UUID userId, UserUpdateRequest updateRequest) {
+        // Validate that userId has been provided and corresponds to an actual user
+        if (userId == null) {
+            throw new ResourceNotFoundException("Missing user Id.");
+        }
+        Optional<UserEntity> foundUserEntity = userRepository.findById(userId);
+        if (foundUserEntity.isEmpty()) {
+            throw new ResourceNotFoundException("User not found.");
+        }
+        UserEntity userEntity = foundUserEntity.get();
+
+        // Update displayName if provided
+        if (updateRequest.getDisplayName() != null) {
+            userEntity.setDisplayName(updateRequest.getDisplayName());
+        }
+
+        // Update external ID if provided
+        if (updateRequest.getExternalId() != null
+            && !updateRequest.getExternalId().equals(userEntity.getExternalId())) {
+            // Validate external ID does not match with any existing users
+            Optional<UserEntity> checkExternalId =
+                userRepository.findUserEntityByExternalId(updateRequest.getExternalId());
+            if (checkExternalId.isPresent()) {
+                throw new BusinessLogicException("This ExternalId is already assigned to a user.");
+            }
+            userEntity.setExternalId(updateRequest.getExternalId());
+        }
+
+        // Update email if provided
+        if (updateRequest.getEmail() != null
+            && !updateRequest.getEmail().equals(userEntity.getEmail())) {
+            // Validate email does not match with any existing users
+            Optional<UserEntity> checkEmail = userRepository.findUserEntityByEmail(updateRequest.getEmail());
+            if (checkEmail.isPresent()) {
+                throw new BusinessLogicException("This Email is already assigned to a user.");
+            }
+            userEntity.setEmail(updateRequest.getEmail());
+        }
+
+        UserEntity savedUser = userRepository.save(userEntity);
+        UserDTO userDTO = UserEntityMapper.INSTANCE.convertUserEntityToUserModel(savedUser);
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(userDTO);
     }
 
     /**

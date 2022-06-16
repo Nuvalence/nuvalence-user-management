@@ -2,6 +2,8 @@ package io.nuvalence.user.management.api.service.controller;
 
 import io.nuvalence.user.management.api.service.generated.controllers.CloudTaskApiDelegate;
 import io.nuvalence.user.management.api.service.generated.models.UserCreationRequest;
+import io.nuvalence.user.management.api.service.generated.models.UserDTO;
+import io.nuvalence.user.management.api.service.generated.models.UserUpdateRequest;
 import io.nuvalence.user.management.api.service.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +24,11 @@ public class CloudTaskDelegateApiImpl implements CloudTaskApiDelegate {
     @Override
     public ResponseEntity<Void> addUser(UserCreationRequest body) {
         return userService.createUser(body);
+    }
+
+    @Override
+    public ResponseEntity<UserDTO> updateUserById(UUID id, UserUpdateRequest body) {
+        return userService.updateUserById(id, body);
     }
 
     @Override
