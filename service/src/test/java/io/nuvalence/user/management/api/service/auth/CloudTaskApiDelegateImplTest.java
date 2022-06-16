@@ -30,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
-public class CloudTaskApiImplTest {
+public class CloudTaskApiDelegateImplTest {
 
     @Autowired
     private MockMvc mockMvc;

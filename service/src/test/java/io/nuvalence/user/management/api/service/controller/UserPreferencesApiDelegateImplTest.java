@@ -40,7 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @WithMockUser
-public class UserPreferencesApiTest {
+public class UserPreferencesApiDelegateImplTest {
 
     @Autowired
     private MockMvc mockMvc;

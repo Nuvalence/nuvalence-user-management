@@ -450,7 +450,7 @@ paths:
           description: "You are unauthorized to make this request"
         "404":
           description: "User not found"
-    post:
+    put:
       tags:
         - "role"
       summary: "updates a role"
@@ -480,6 +480,104 @@ paths:
           description: "You are unauthorized to make this request"
         "404":
           description: "Role not found"
+  /permission:
+    post:
+      tags:
+        - "permission"
+      summary: "Create a permission"
+      operationId: "addPermission"
+      parameters:
+        - name: body
+          in: body
+          description: "permission object"
+          required: true
+          schema:
+            $ref: "#/definitions/CreateOrUpdatePermissionDTO"
+      responses:
+        "201":
+          description: "successful operation"
+        "400":
+          description: "Invalid request body"
+        "401":
+          description: "You are unauthorized to make this request"
+    get:
+      tags:
+        - "permission"
+      summary: "Get all permissions"
+      operationId: "getAllPermissions"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/AllPermissions"
+        "401":
+          description: "You are unauthorized to make this request"
+  /permission/{id}:
+    delete:
+      tags:
+        - "permission"
+      summary: "Delete permission by id"
+      operationId: "deletePermissionById"
+      parameters:
+        - name: "id"
+          in: "path"
+          description: "Id of permission to delete"
+          required: true
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: "successful operation"
+        "401":
+          description: "You are unauthorized to make this request"
+        "404":
+          description: "Permission not found"
+    get:
+      tags:
+        - "permission"
+      summary: "get an individual permission and its applications"
+      operationId: "getPermissionById"
+      parameters:
+        - name: "id"
+          in: "path"
+          description: "Id of permission"
+          required: true
+          type: "string"
+          format: uuid
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            $ref: '#/definitions/PermissionDTO'
+        "401":
+          description: "You are unauthorized to make this request"
+        "404":
+          description: "Permission not found"
+    put:
+      tags:
+        - "permission"
+      summary: "updates a permission"
+      operationId: "updatePermission"
+      parameters:
+        - name: "id"
+          in: "path"
+          description: "Id of permission to update"
+          required: true
+          type: "string"
+          format: uuid
+        - name: body
+          in: body
+          description: "permission object"
+          required: true
+          schema:
+            $ref: "#/definitions/CreateOrUpdatePermissionDTO"
+      responses:
+        "201":
+          description: "successful operation"
+        "401":
+          description: "You are unauthorized to make this request"
+        "404":
+          description: "Permission not found"
   /languages/{id}:
     get:
       tags:
@@ -516,6 +614,24 @@ paths:
             example: [ { id: "1234", name: "User Management Application"} ]
             items:
               $ref: "#/definitions/ApplicationDTO"
+  /applications/{id}:
+    get:
+      tags:
+        - "application"
+      summary: "Returns a single application."
+      operationId: "getApplicationById"
+      parameters:
+        - name: "id"
+          in: path
+          description: "ID for the application."
+          type: "string"
+          required: true
+          format: uuid
+      responses:
+        "200":
+          description: "Successful operation"
+          schema:
+            $ref: "#/definitions/ApplicationDTO"
 
   /custom-fields:
     get:
@@ -737,6 +853,10 @@ definitions:
     type: array
     items:
       $ref: '#/definitions/UserDTO'
+  AllPermissions:
+    type: array
+    items:
+      $ref: '#/definitions/PermissionDTO'
   UserDTO:
     type: object
     required:
@@ -803,6 +923,54 @@ definitions:
         $ref: '#/definitions/LanguageDTO'
       communicationPreference:
         type: string
+  PermissionDTO:
+    type: object
+    required:
+      - name
+      - displayName
+    properties:
+      id:
+        type: string
+        format: uuid
+      name:
+        type: string
+      displayName:
+        type: string
+      description:
+        type: string
+      applications:
+        type: array
+        items:
+          $ref: "#/definitions/SimpleListDTO"
+  PermissionListDTO:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+      name:
+        type: string
+      displayName:
+        type: string
+      description:
+        type: string
+  CreateOrUpdatePermissionDTO:
+    type: object
+    required:
+      - name
+      - displayName
+    properties:
+      name:
+        type: string
+      displayName:
+        type: string
+      description:
+        type: string
+      applications:
+        type: array
+        items:
+          type: string
+          format: uuid
   ApplicationPreferenceDTO:
     type: object
     properties:
@@ -992,3 +1160,15 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/LanguageDTO'
+      permissions:
+        type: array
+        items:
+          $ref: '#/definitions/PermissionListDTO'
+  SimpleListDTO:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+      name:
+        type: string

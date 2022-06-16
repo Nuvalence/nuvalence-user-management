@@ -321,4 +321,42 @@
             </column>
         </addColumn>
     </changeSet>
+    <changeSet id="add-perm-tables" author="gcastro12">
+        <createTable tableName="permission">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true"
+                             primaryKeyName="pk_permission_id"
+                             nullable="false"/>
+            </column>
+            <column name="name" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="display_name" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+        <createTable tableName="application_permission">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true"
+                             primaryKeyName="pk_application_permission_id"
+                             nullable="false"/>
+            </column>
+            <column name="permission_id" type="uuid">
+                <constraints foreignKeyName="fk_application_permission_permission_id"
+                             references="permission(id)"
+                             nullable="false"/>
+            </column>
+            <column name="application_id" type="uuid">
+                <constraints foreignKeyName="fk_application_permission_application_id"
+                             references="application(id)"
+                             nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="application_permission"
+                             columnNames="permission_id, application_id"
+                             constraintName="Unique_Application_To_Permission"/>
+    </changeSet>
 </databaseChangeLog>

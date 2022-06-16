@@ -17,15 +17,16 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 /**
- * Represents a single application.
+ * Represents a single Permission entity.
  */
+
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "application")
-public class ApplicationEntity {
+@Table(name = "permission")
+public class PermissionEntity {
     @Id
     @GeneratedValue(generator = "uuid2")
     @GenericGenerator(name = "uuid2", strategy = "org.hibernate.id.UUIDGenerator")
@@ -33,12 +34,15 @@ public class ApplicationEntity {
     @Column(name = "id", length = 36, insertable = false, updatable = false, nullable = false)
     private UUID id;
 
-    @Column(name = "app_name", nullable = false, unique = true)
+    @Column(name = "name", length = 128, nullable = false)
     private String name;
 
-    @OneToMany(mappedBy = "application")
-    private List<ApplicationLanguageEntity> supportedLanguages;
+    @Column(name = "display_name", length = 128, nullable = false)
+    private String displayName;
 
-    @OneToMany(mappedBy = "application")
-    private List<ApplicationPermissionEntity> permissions;
+    @Column(name = "description", length = 255, nullable = true)
+    private String description;
+
+    @OneToMany(mappedBy = "permission")
+    private List<ApplicationPermissionEntity> applicationPermissionEntities;
 }

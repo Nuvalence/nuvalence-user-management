@@ -90,8 +90,9 @@ public class CerbosClient implements Permissionable {
                             responseBody.getResourceInstances().entrySet()) {
                         if (user.getValue().getActions() != null) {
                             for (Map.Entry<String, Effect> action : user.getValue().getActions().entrySet()) {
-                                if (Arrays.asList(permissionsToCheck).contains(action.getKey())
-                                        && action.getValue() == Effect.EFFECT_ALLOW) {
+                                if (Arrays.stream(permissionsToCheck)
+                                        .anyMatch(p -> p.equalsIgnoreCase(action.getKey())
+                                                && action.getValue() == Effect.EFFECT_ALLOW)) {
                                     return true;
                                 }
                             }
@@ -179,7 +180,7 @@ public class CerbosClient implements Permissionable {
             Map<String, String[]> rolePermissionMap = new HashMap<>();
 
             for (ResourceRule rule : foundPolicy.get().getResourcePolicy().getRules()) {
-                rolePermissionMap.put(rule.getRoles()[0], rule.getActions());
+                rolePermissionMap.put(rule.getRoles()[0], lowerCaseStringArray(rule.getActions()));
             }
 
             return rolePermissionMap;
@@ -252,7 +253,7 @@ public class CerbosClient implements Permissionable {
                         .kind(resourceName)
                         .instances(Map.of(userEntity.getDisplayName(), new AttributesMap()))
                         .build())
-                .actions(permissionsToCheck)
+                .actions(lowerCaseStringArray(permissionsToCheck))
                 .build();
     }
 
@@ -270,7 +271,7 @@ public class CerbosClient implements Permissionable {
         if (permissions != null && permissions.length > 0) {
             rules.add(ResourceRule.builder()
                     .roles(new String[] { roleName })
-                    .actions(permissions)
+                    .actions(lowerCaseStringArray(permissions))
                     .effect(Effect.EFFECT_ALLOW)
                     .build());
         }
@@ -286,5 +287,13 @@ public class CerbosClient implements Permissionable {
                                                 .rules(rules.toArray(new ResourceRule[0])).build()
                                 ).build()
                 }).build();
+    }
+
+    private String[] lowerCaseStringArray(String[] strAry) {
+        if (strAry == null || strAry.length == 0) {
+            return new String[] { };
+        }
+
+        return Arrays.stream(strAry).map(s -> s.toLowerCase()).toArray(String[]::new);
     }
 }

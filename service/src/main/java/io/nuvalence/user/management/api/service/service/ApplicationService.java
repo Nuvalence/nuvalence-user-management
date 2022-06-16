@@ -1,5 +1,6 @@
 package io.nuvalence.user.management.api.service.service;
 
+import io.nuvalence.user.management.api.service.config.exception.ResourceNotFoundException;
 import io.nuvalence.user.management.api.service.entity.ApplicationEntity;
 import io.nuvalence.user.management.api.service.generated.models.ApplicationDTO;
 import io.nuvalence.user.management.api.service.mapper.ApplicationEntityMapper;
@@ -10,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -34,5 +37,23 @@ public class ApplicationService {
         }).collect(Collectors.toList());
 
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(applications);
+    }
+
+    /**
+     * Returns an application by its id.
+     *
+     * @param id the id of the application.
+     * @return an application.
+     */
+    public ResponseEntity<ApplicationDTO> getApplicationById(UUID id) {
+        Optional<ApplicationEntity> applicationEntity = applicationRepository.findById(id);
+        if (applicationEntity.isEmpty()) {
+            throw new ResourceNotFoundException("Application not found!");
+        }
+
+        ApplicationDTO application = ApplicationEntityMapper.INSTANCE
+                .applicationEntityToApplicationDto(applicationEntity.get());
+
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(application);
     }
 }
