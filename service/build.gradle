@@ -33,17 +33,30 @@ dependencies {
 	implementation 'com.vladmihalcea:hibernate-types-52:2.16.1'
 
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.json:json:20220320'
+	implementation 'org.apache.commons:commons-lang3:3.12.0'
+	implementation 'com.google.firebase:firebase-admin:8.1.0'
+
+	//implementation 'com.google.cloud:spring-cloud-gcp-starter-secretmanager:2.0.10' // Tied to SpringBoot 2.5.7
+	implementation 'com.fasterxml.jackson.core:jackson-databind:2.10.0'
 
 	// Database management
-	runtimeOnly 'com.google.cloud.sql:postgres-socket-factory:1.5.0'
+	implementation 'com.google.cloud.sql:postgres-socket-factory:1.5.0'
 	runtimeOnly 'org.postgresql:postgresql'
 	runtimeOnly 'com.h2database:h2:2.1.210'
 	implementation 'org.liquibase:liquibase-core'
 
+	// Auth Helpers
+	implementation 'com.auth0:java-jwt:3.19.1'
+	implementation 'org.springframework.boot:spring-boot-starter-security:2.6.6'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+
 	// Testing
 	implementation 'org.avaje.composite:junit:5.1'
 	implementation 'org.mockito:junit-jupiter:2.20.0'
-	implementation 'org.mockito:mockito-core:4.3.1'
+	implementation 'org.mockito:mockito-core:4.4.0'
+	implementation 'org.springframework.security:spring-security-test:5.6.2'
+	testImplementation "org.mockito:mockito-inline:3.11.2"
 }
 
 // dockerCompose plugin: https://github.com/avast/gradle-docker-compose-plugin
@@ -63,6 +76,12 @@ tasks.withType(JavaCompile) {
 	options.compilerArgs = [
 			'-Amapstruct.suppressGeneratorTimestamp=true'
 	]
+}
+
+jib {
+	container {
+		jvmFlags = ['-Dspring.profiles.active=deployment']
+	}
 }
 
 bootRun {

@@ -40,25 +40,6 @@ paths:
           description: "You are unauthorized to make this request"
         "404":
           description: "User not found"
-    delete:
-      tags:
-        - "user"
-      summary: "Delete user by user Id"
-      operationId: "deleteUserById"
-      parameters:
-        - name: "id"
-          in: "path"
-          description: "id of the user to delete "
-          required: true
-          type: "string"
-          format: uuid
-      responses:
-        "200":
-          description: "successful operation"
-        "401":
-          description: "You are unauthorized to make this request"
-        "404":
-          description: "User not found"
   /user/{id}/custom-field:
     put:
       tags:
@@ -306,6 +287,7 @@ paths:
           description: "You are unauthorized to make this request"
         "404":
           description: "User not found"
+  /cloud-task/user:
     post:
       tags:
         - "user"
@@ -323,6 +305,26 @@ paths:
           description: "successful operation"
         "400":
           description: "Invalid request body"
+        "401":
+          description: "You are unauthorized to make this request"
+        "404":
+          description: "User not found"
+  /cloud-task/user/{id}:
+    delete:
+      tags:
+        - "user"
+      summary: "Delete user by user Id"
+      operationId: "deleteUserById"
+      parameters:
+        - name: "id"
+          in: "path"
+          description: "id of the user to delete "
+          required: true
+          type: "string"
+          format: uuid
+      responses:
+        "200":
+          description: "successful operation"
         "401":
           description: "You are unauthorized to make this request"
         "404":
@@ -647,6 +649,24 @@ paths:
         "401":
           description: "You are not authorized to make this request"
 
+  /auth/token/refresh:
+    get:
+      tags:
+        - "authorization"
+      summary: "refresh access token"
+      operationId: "refreshToken"
+      responses:
+        "201":
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/TokenRefreshPacket"
+        "400":
+          description: "Invalid request body"
+        "401":
+          description: "You are unauthorized to make this request"
+        "404":
+          description: "Role not found"
+
 definitions:
   CustomFieldDataType:
     type: string
@@ -752,6 +772,7 @@ definitions:
     required:
       - email
       - displayName
+      - externalId
     properties:
       displayName:
         type: string
@@ -897,3 +918,10 @@ definitions:
         type: array
         items:
           $ref: "#/definitions/CustomFieldOptionDTO"
+  TokenRefreshPacket:
+    type: object
+    properties:
+      accessToken:
+        type: string
+      refreshToken:
+        type: string

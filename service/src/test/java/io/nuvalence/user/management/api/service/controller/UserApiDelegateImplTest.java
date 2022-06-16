@@ -23,6 +23,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
@@ -40,7 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
 public class UserApiDelegateImplTest {
     @Autowired
@@ -53,6 +54,7 @@ public class UserApiDelegateImplTest {
     private UserService userService;
 
     @Test
+    @WithMockUser
     public void addUser() throws Exception {
         UserCreationRequest user = createNewUserModel();
         ResponseEntity<Void> res = ResponseEntity.status(200).build();
@@ -60,22 +62,24 @@ public class UserApiDelegateImplTest {
         final String postBody = new ObjectMapper().writeValueAsString(user);
 
         mockMvc.perform(
-                post("/api/v2/user")
+                post("/api/v2/cloud-task/user")
                         .content(postBody)
                         .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(status().isOk());
     }
 
     @Test
+    @WithMockUser
     public void deleteUserById() throws Exception {
         UserEntity userEntity = createMockUser();
         when(userRepository.findById(userEntity.getId())).thenReturn(Optional.of(userEntity));
 
-        mockMvc.perform(delete("/api/v2/user/" + userEntity.getId().toString()))
+        mockMvc.perform(delete("/api/v2/cloud-task/user/" + userEntity.getId().toString()))
                 .andExpect(status().isOk());
     }
 
     @Test
+    @WithMockUser
     public void getUserById() throws Exception {
         UserEntity userEntity = createMockUser();
         when(userRepository.findById(userEntity.getId())).thenReturn(Optional.of(userEntity));
@@ -86,6 +90,7 @@ public class UserApiDelegateImplTest {
     }
 
     @Test
+    @WithMockUser
     public void getUserByEmail() throws Exception {
         UserEntity userEntity = createMockUser();
         when(userRepository.findUserEntityByEmail(userEntity.getEmail())).thenReturn(Optional.of(userEntity));
@@ -96,6 +101,7 @@ public class UserApiDelegateImplTest {
     }
 
     @Test
+    @WithMockUser
     public void getUserList() throws Exception {
         UserEntity userEntity = createMockUser();
         UserDTO userModel = UserEntityMapper.INSTANCE
@@ -114,6 +120,7 @@ public class UserApiDelegateImplTest {
     }
 
     @Test
+    @WithMockUser
     public void getUserRolesById() throws Exception {
         UUID userId = createMockUser().getId();
         List<RoleDTO> roles = MapperUtils
@@ -133,6 +140,7 @@ public class UserApiDelegateImplTest {
     }
 
     @Test
+    @WithMockUser
     public void assignRoleToUser() throws Exception {
         UserRoleDTO userRole = createMockUserRoleDto();
 
@@ -148,6 +156,7 @@ public class UserApiDelegateImplTest {
     }
 
     @Test
+    @WithMockUser
     public void removeRoleFromUser() throws Exception {
         UserRoleDTO userRole = createMockUserRoleDto();
 
@@ -163,6 +172,7 @@ public class UserApiDelegateImplTest {
     }
 
     @Test
+    @WithMockUser
     public void updateUserCustomFieldValue() throws Exception {
         CreateOrUpdateUserCustomFieldDTO customField = createMockUserCustomFieldDto();
         ResponseEntity<Void> res = ResponseEntity.ok().build();

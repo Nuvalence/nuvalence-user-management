@@ -10,13 +10,11 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import javax.transaction.Transactional;
 
 /**
  * Service for retrieving languages.
  */
 @Component
-@Transactional
 @RequiredArgsConstructor
 public class ApplicationLanguageService {
 

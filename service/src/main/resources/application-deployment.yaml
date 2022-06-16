@@ -9,9 +9,15 @@ spring:
     url: jdbc:postgresql://localhost:5432/user
     user: username
     password: password
+
 management:
   endpoints:
     web:
       cors:
         allowed-origins: http://localhost:4200, http://localhost:4201
         allow-credentials: true
+
+firebase:
+  credential:
+    resource-path: ${_FIREBASE_CONFIG}
+    api-key: ${_FIREBASE_API_KEY}

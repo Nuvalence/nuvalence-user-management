@@ -2,14 +2,12 @@ package io.nuvalence.user.management.api.service;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
  * Simple web configuration to disable cors for local demo.
  */
-@EnableWebMvc
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 

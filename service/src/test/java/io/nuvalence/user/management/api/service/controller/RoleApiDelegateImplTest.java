@@ -13,6 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
@@ -30,7 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
 public class RoleApiDelegateImplTest {
     @Autowired
@@ -40,6 +41,7 @@ public class RoleApiDelegateImplTest {
     private RoleService roleService;
 
     @Test
+    @WithMockUser
     public void addRole() throws Exception {
         RoleDTO role = createMockRoleDto();
 
@@ -55,6 +57,7 @@ public class RoleApiDelegateImplTest {
     }
 
     @Test
+    @WithMockUser
     public void getAllRoles() throws Exception {
         List<RoleDTO> roles = List.of(createMockRoleDto());
 
@@ -69,6 +72,7 @@ public class RoleApiDelegateImplTest {
     }
 
     @Test
+    @WithMockUser
     public void deleteRoleById() throws Exception {
         RoleDTO role = createMockRoleDto();
 
@@ -81,6 +85,7 @@ public class RoleApiDelegateImplTest {
     }
 
     @Test
+    @WithMockUser
     public void getUsersByRole() throws Exception {
         UserDTO user = new UserDTO();
         user.setEmail("ThatGuySmoke@yahoo.com");

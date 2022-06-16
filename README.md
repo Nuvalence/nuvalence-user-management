@@ -41,6 +41,47 @@ cerbos:
   password: "cerbosPassword"
 ```
 
+## Enabling Spring Security
+Spring security with Firebase authorization is currently included in the User Management API. In order to enable 
+this, you will need to:
+1. Remove the comment on this line in `build.gradle`
+    ```
+    implementation 'com.google.cloud:spring-cloud-gcp-starter-secretmanager:2.0.10'
+    ```
+2. Remove the comments and include necessary imports in the following files
+   1. `service/src/main/java/io/nuvalence/user/management/api/service/auth/WebSecurityConfig.java`
+   2. `service/src/main/java/io/nuvalence/user/management/api/service/config/RunAfterStartUp.java`
+   3. `service/src/test/java/io/nuvalence/user/management/api/service/auth/JwtUtilityTest.java`
+
+Once this is reenabled, in order to launch the application context, google credential's need to be applied to access
+secret manager's resources (API Key, and Firebase Config). Simply run the following gcloud commands:
+```shell
+gcloud init
+```
+Use this to set the default account to the project you need to access.
+
+```shell
+gcloud auth application-default login
+```
+This will prompt you to authorize through google with your email.
+
+* Lastly you will need to create an environment variable CLOUDSDK_CONFIG that points to google's default credentials.
+  <br>
+
+Mac
+```shell
+$HOME/.config/gcloud
+```
+
+Linux location:
+```shell
+~/.config/gcloud
+```
+Windows location:
+```shell 
+C:\Users\%username%\AppData\Roaming\gcloud
+```
+
 ## Contributors
 The Nuvalence User Management API was originally a private project with contributions from:
 - [@Mark-The-Dev](https://github.com/Mark-The-Dev)

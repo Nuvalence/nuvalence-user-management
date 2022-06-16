@@ -15,6 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
@@ -43,6 +44,7 @@ public class CustomFieldsApiDelegateImplTest {
     private CustomFieldService customFieldService;
 
     @Test
+    @WithMockUser
     public void getAllCustomFields() throws Exception {
         List<CustomFieldDTO> fields = List.of(getMockCustomFieldDto());
         ResponseEntity<List<CustomFieldDTO>> res = ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
@@ -56,6 +58,7 @@ public class CustomFieldsApiDelegateImplTest {
     }
 
     @Test
+    @WithMockUser
     public void addCustomField() throws Exception {
         ResponseEntity<Void> res = ResponseEntity.ok().build();
         CreateCustomFieldDTO customField = getMockCreateCustomFieldDto();
@@ -71,6 +74,7 @@ public class CustomFieldsApiDelegateImplTest {
     }
 
     @Test
+    @WithMockUser
     public void getCustomFieldById() throws Exception {
         CustomFieldDTO customField = getMockCustomFieldDto();
         ResponseEntity<CustomFieldDTO> res = ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
@@ -84,6 +88,7 @@ public class CustomFieldsApiDelegateImplTest {
     }
 
     @Test
+    @WithMockUser
     public void updateCustomField() throws Exception {
         UpdateCustomFieldDTO customField = getMockUpdateCustomFieldDto();
         ResponseEntity<Void> res = ResponseEntity.ok().build();
@@ -98,6 +103,7 @@ public class CustomFieldsApiDelegateImplTest {
     }
 
     @Test
+    @WithMockUser
     public void deleteCustomField() throws Exception {
         ResponseEntity<Void> res = ResponseEntity.ok().build();
         when(customFieldService.deleteCustomField(any())).thenReturn(res);
@@ -108,6 +114,7 @@ public class CustomFieldsApiDelegateImplTest {
     }
 
     @Test
+    @WithMockUser
     public void getOptionsForCustomField() throws Exception {
         List<CustomFieldOptionDTO> options = List.of(getMockCustomFieldOptionDto());
         ResponseEntity<List<CustomFieldOptionDTO>> res = ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
@@ -121,6 +128,7 @@ public class CustomFieldsApiDelegateImplTest {
     }
 
     @Test
+    @WithMockUser
     public void updateCustomFieldOptions() throws Exception {
         List<CreateOrUpdateCustomFieldOptionDTO> options = List.of(getMockCreateOrUpdateCustomFieldOptionDto());
         ResponseEntity<Void> res = ResponseEntity.ok().build();
