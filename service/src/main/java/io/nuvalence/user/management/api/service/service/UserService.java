@@ -28,7 +28,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -58,8 +57,6 @@ public class UserService {
     private final UserCustomFieldRepository userCustomFieldRepository;
     private final RoleRepository roleRepository;
     private final CerbosClient client;
-
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     /**
      * Creates a User Entity from a user model.
