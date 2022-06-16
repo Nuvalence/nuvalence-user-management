@@ -70,6 +70,9 @@ public class UserService {
             throw new BusinessLogicException("Missing identifier for user: " + user.getEmail());
         }
 
+        if (user.getEmail() == null) {
+            throw new BusinessLogicException("Missing email for user");
+        }
         Optional<UserEntity> checkEmail = userRepository.findUserEntityByEmail(user.getEmail());
         if (checkEmail.isPresent()) {
             throw new BusinessLogicException("This Email is already assigned to a user.");
@@ -78,6 +81,10 @@ public class UserService {
         Optional<UserEntity> checkExternalId = userRepository.findUserEntityByExternalId(user.getExternalId());
         if (checkExternalId.isPresent()) {
             throw new BusinessLogicException("This ExternalId is already assigned to a user.");
+        }
+
+        if (user.getDisplayName() == null) {
+            throw new BusinessLogicException("Missing display name for user: " + user.getEmail());
         }
 
         UserEntity userEntity = UserEntityMapper.INSTANCE.convertUserCreationRequestToUserEntity(user);

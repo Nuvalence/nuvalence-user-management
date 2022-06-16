@@ -126,44 +126,58 @@ public class UserServiceTest {
     }
 
     @Test
-    public void createUser_throwsExceptionIf_null_external_id() {
+    public void createUser_fails_IfFieldsAreMissing() {
+        // NOTE: Only email, externalId, and displayName are tested for presence.
+        // initialRoles seems to be set to [] automatically when making a normal HTTP request, so it is
+        // not tested as null.
         UserCreationRequest userModel = createUserCreationRequest();
+        RoleDTO role = createRoleDto();
+        userModel.setInitialRoles(List.of(role));
+
+        // Display name
+        userModel.setDisplayName(null);
+        Exception exception = assertThrows(BusinessLogicException.class, () -> {
+            userService.createUser(userModel);
+        });
+        assertEquals(exception.getMessage(), "Missing display name for user: Skipper@theIsland.com");
+        userModel.setDisplayName("John Locke");
+
+        // Email
+        userModel.setEmail(null);
+        exception = assertThrows(BusinessLogicException.class, () -> {
+            userService.createUser(userModel);
+        });
+        assertEquals(exception.getMessage(), "Missing email for user");
+        userModel.setEmail("Skipper@theIsland.com");
+
+        // External Id
         userModel.setExternalId(null);
-        RoleDTO role = createRoleDto();
-        userModel.setInitialRoles(List.of(role));
-
-
-        Exception exception = assertThrows(BusinessLogicException.class, () -> {
+        exception = assertThrows(BusinessLogicException.class, () -> {
             userService.createUser(userModel);
         });
         assertEquals(exception.getMessage(), "Missing identifier for user: Skipper@theIsland.com");
     }
 
     @Test
-    public void createUser_throwsExceptionIf_empty_external_id() {
-        UserCreationRequest userModel = createUserCreationRequest();
-        userModel.setExternalId("");
-        RoleDTO role = createRoleDto();
-        userModel.setInitialRoles(List.of(role));
-
-
-        Exception exception = assertThrows(BusinessLogicException.class, () -> {
-            userService.createUser(userModel);
-        });
-        assertEquals(exception.getMessage(), "Missing identifier for user: Skipper@theIsland.com");
-    }
-
-    @Test
-    public void createUser_fails_ifEmailIsTaken() {
+    public void createUser_fails_ifEmailOrExternalIdIsTaken() {
         UserCreationRequest userModel = createUserCreationRequest();
         UserEntity userEntity = createUserEntity();
 
+        // Email
         when(userRepository.findUserEntityByEmail(userModel.getEmail())).thenReturn(Optional.of(userEntity));
-
         Exception exception = assertThrows(BusinessLogicException.class, () -> {
             userService.createUser(userModel);
         });
         assertTrue(exception.getMessage().contains("This Email is already assigned to a user."));
+        when(userRepository.findUserEntityByEmail(userModel.getEmail())).thenReturn(Optional.empty());
+
+        // External Id
+        when(userRepository.findUserEntityByExternalId(userModel.getExternalId())).thenReturn(Optional.of(userEntity));
+        exception = assertThrows(BusinessLogicException.class, () -> {
+            userService.createUser(userModel);
+        });
+        assertTrue(exception.getMessage().contains("This ExternalId is already assigned to a user."));
+
     }
 
     @Test

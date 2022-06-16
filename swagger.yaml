@@ -788,6 +788,7 @@ definitions:
       - email
       - displayName
       - externalId
+      - initialRoles
     properties:
       displayName:
         type: string
