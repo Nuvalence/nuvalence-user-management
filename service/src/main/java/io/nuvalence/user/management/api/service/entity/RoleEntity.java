@@ -37,6 +37,9 @@ public class RoleEntity {
     @Column(name = "role_name", nullable = false)
     private String roleName;
 
+    @Column(name = "linked_application")
+    private UUID linkedApplication;
+
     @OneToMany(mappedBy = "role")
     private List<UserRoleEntity> userRoleEntities;
 }

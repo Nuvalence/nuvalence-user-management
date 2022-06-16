@@ -31,11 +31,11 @@ public class ApplicationEntity {
     @GenericGenerator(name = "uuid2", strategy = "org.hibernate.id.UUIDGenerator")
     @Type(type = "uuid-char")
     @Column(name = "id", length = 36, insertable = false, updatable = false, nullable = false)
-    public UUID id;
+    private UUID id;
 
     @Column(name = "app_name", nullable = false, unique = true)
-    public String name;
+    private String name;
 
     @OneToMany(mappedBy = "application")
-    public List<ApplicationLanguageEntity> supportedLanguages;
+    private List<ApplicationLanguageEntity> supportedLanguages;
 }

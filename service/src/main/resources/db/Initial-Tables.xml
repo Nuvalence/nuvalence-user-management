@@ -311,4 +311,14 @@
                    ('5d01d9e3-f8a8-42e3-877c-b743bff79e7f', 'datetime');
         </sql>
     </changeSet>
+    <changeSet id="add-linked-applications-column-to-role-table" author="jhazelke">
+        <addColumn tableName="role">
+            <column name="linked_application" type="uuid">
+                <constraints
+                        foreignKeyName="fk_app_to_role_key"
+                        references="application(id)"
+                />
+            </column>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

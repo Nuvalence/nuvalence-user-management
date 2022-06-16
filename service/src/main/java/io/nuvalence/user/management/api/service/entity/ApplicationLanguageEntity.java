@@ -31,13 +31,13 @@ public class ApplicationLanguageEntity {
     @GenericGenerator(name = "uuid2", strategy = "org.hibernate.id.UUIDGenerator")
     @Type(type = "uuid-char")
     @Column(name = "id", length = 36, insertable = false, updatable = false, nullable = false)
-    public UUID id;
+    private UUID id;
 
     @ManyToOne
     @JoinColumn(name = "app_id", nullable = false)
-    public ApplicationEntity application;
+    private ApplicationEntity application;
 
     @ManyToOne
     @JoinColumn(name = "lang_id", nullable = false)
-    public LanguageEntity language;
+    private LanguageEntity language;
 }
