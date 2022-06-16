@@ -3,6 +3,7 @@ package io.nuvalence.user.management.api.service.config;
 import io.nuvalence.user.management.api.service.config.exception.BusinessLogicException;
 import io.nuvalence.user.management.api.service.config.exception.InternalServerException;
 import io.nuvalence.user.management.api.service.config.exception.ResourceNotFoundException;
+import io.nuvalence.user.management.api.service.config.exception.TokenAuthorizationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -52,5 +53,10 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(new ApiError(ex.getMessage()), HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler(TokenAuthorizationException.class)
+    protected ResponseEntity<Object> handleTokenAuthorizationException(Exception ex) {
+        log.error("There was an error processing the request:", ex);
+        return new ResponseEntity<>(new ApiError(ex.getMessage()), HttpStatus.FORBIDDEN);
+    }
 
 }

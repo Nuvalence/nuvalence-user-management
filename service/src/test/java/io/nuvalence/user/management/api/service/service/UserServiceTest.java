@@ -36,6 +36,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.time.Clock;
 import java.time.OffsetDateTime;
@@ -46,7 +47,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -74,6 +74,9 @@ public class UserServiceTest {
 
     @Mock
     private CerbosClient client;
+
+    @Mock
+    private BCryptPasswordEncoder passwordEncoder;
 
     @InjectMocks
     private UserService userService;
@@ -127,36 +130,31 @@ public class UserServiceTest {
     }
 
     @Test
-    public void createUser_creates_a_user_with_null_external_id() {
+    public void createUser_throwsExceptionIf_null_external_id() {
         UserCreationRequest userModel = createUserCreationRequest();
         userModel.setExternalId(null);
         RoleDTO role = createRoleDto();
         userModel.setInitialRoles(List.of(role));
-        RoleEntity roleEntity = createRoleEntity();
-        List<UserCustomFieldEntity> userCustomFieldEntities = createUserCustomFieldEntityList();
-        List<CreateOrUpdateUserCustomFieldDTO> customFields = getCreateUserCustomFieldList(userCustomFieldEntities);
-        userModel.setCustomFields(customFields);
 
-        when(roleRepository.findAllById(any())).thenReturn(List.of(roleEntity));
-        when(customFieldRepository.findAllById(any())).thenReturn(
-                userCustomFieldEntities.stream().map(UserCustomFieldEntity::getCustomField).collect(Collectors.toList())
-        );
 
-        ResponseEntity<Void> res = userService.createUser(userModel);
-        assertEquals(res.getStatusCode(), HttpStatus.OK);
-        verify(userRepository).save(userCaptor.capture());
-        UserEntity savedEntity = userCaptor.getValue();
-        assertNull(savedEntity.getExternalId());
-        assertEquals(savedEntity.getDisplayName(), userModel.getDisplayName());
-        assertEquals(savedEntity.getEmail(), userModel.getEmail());
+        Exception exception = assertThrows(BusinessLogicException.class, () -> {
+            userService.createUser(userModel);
+        });
+        assertEquals(exception.getMessage(), "Missing identifier for user: Skipper@theIsland.com");
+    }
 
-        verify(userRoleRepository).saveAll(userRoleListCaptor.capture());
-        Iterable<UserRoleEntity> savedUserRoles = userRoleListCaptor.getValue();
-        assertEquals(savedUserRoles.iterator().next().getRole().getId(), role.getId());
+    @Test
+    public void createUser_throwsExceptionIf_empty_external_id() {
+        UserCreationRequest userModel = createUserCreationRequest();
+        userModel.setExternalId("");
+        RoleDTO role = createRoleDto();
+        userModel.setInitialRoles(List.of(role));
 
-        verify(userCustomFieldRepository).saveAll(userCustomFieldListCaptor.capture());
-        Iterable<UserCustomFieldEntity> savedUserCustomFields = userCustomFieldListCaptor.getValue();
-        assertEquals(IterableUtil.sizeOf(savedUserCustomFields), userModel.getCustomFields().size());
+
+        Exception exception = assertThrows(BusinessLogicException.class, () -> {
+            userService.createUser(userModel);
+        });
+        assertEquals(exception.getMessage(), "Missing identifier for user: Skipper@theIsland.com");
     }
 
     @Test
@@ -522,6 +520,7 @@ public class UserServiceTest {
         userEntity.setEmail("Skipper@theIsland.com");
         userEntity.setDisplayName("John Locke");
         userEntity.setExternalId("TestExternalId1234");
+        userEntity.setId(UUID.fromString("ca8cfd1b-8643-4185-ba7f-8c8fbc9a7da6"));
         return userEntity;
     }
 
@@ -538,6 +537,7 @@ public class UserServiceTest {
         user.setExternalId(userEntity.getExternalId());
         user.setEmail(userEntity.getEmail());
         user.setDisplayName(userEntity.getDisplayName());
+        user.setId(userEntity.getId());
         return user;
     }
 

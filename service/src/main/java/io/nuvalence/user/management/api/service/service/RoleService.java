@@ -22,14 +22,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import javax.transaction.Transactional;
 
 /**
  * Service for Role.
  */
 
 @Component
-@Transactional
 @RequiredArgsConstructor
 @Slf4j
 public class RoleService {

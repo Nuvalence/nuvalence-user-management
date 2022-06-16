@@ -12,14 +12,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
-import javax.transaction.Transactional;
 
 /**
  * Service for validation.
  */
 
 @Component
-@Transactional
 @RequiredArgsConstructor
 @Slf4j
 public class ValidateService {

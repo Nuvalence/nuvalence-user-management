@@ -5,7 +5,6 @@ import io.nuvalence.user.management.api.service.generated.controllers.UserApiDel
 import io.nuvalence.user.management.api.service.generated.models.ApplicationPreferenceDTO;
 import io.nuvalence.user.management.api.service.generated.models.CreateOrUpdateUserCustomFieldDTO;
 import io.nuvalence.user.management.api.service.generated.models.RoleDTO;
-import io.nuvalence.user.management.api.service.generated.models.UserCreationRequest;
 import io.nuvalence.user.management.api.service.generated.models.UserDTO;
 import io.nuvalence.user.management.api.service.generated.models.UserPreferenceDTO;
 import io.nuvalence.user.management.api.service.generated.models.UserRoleDTO;
@@ -39,18 +38,7 @@ public class UserApiDelegateImpl implements UserApiDelegate {
     }
 
     @Override
-    public ResponseEntity<Void> addUser(UserCreationRequest body) {
-        return userService.createUser(body);
-    }
-
-    @Override
-    public ResponseEntity<Void> deleteUserById(UUID id) {
-        return userService.deleteUser(id);
-    }
-
-    @Override
     public ResponseEntity<UserDTO> getUserById(UUID id, String resource) {
-
         return userService.fetchUserById(id, resource);
     }
 

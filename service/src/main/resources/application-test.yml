@@ -13,18 +13,22 @@ spring:
     password: sa
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-    liquibase:
-      driver-class-name: org.h2.Driver
-      url: jdbc:h2:mem:db;NON_KEYWORDS=USER;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;INIT=CREATE TYPE IF NOT EXISTS "JSONB" AS text;
-      user: sa
-      password: sa
+    hibernate:
+      ddl-auto: none
+  cloud:
+    gcp:
+      sql:
+        enabled: false
+      firestore:
+        enabled: false
 
 management:
   endpoints:
     web:
       exposure:
         include: "*"
+
+firebase:
+  credential:
+    resource-path: ${sm://projects/ny-dol-wp-work-manager/secrets/firebase-config}
+    api-key: ${sm://projects/ny-dol-wp-work-manager/secrets/firebase-api-key}

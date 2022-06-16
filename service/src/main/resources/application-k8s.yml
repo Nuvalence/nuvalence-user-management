@@ -21,3 +21,7 @@ management:
       cors:
         allowed-origins: http://localhost:4200, http://localhost:4201
         allow-credentials: true
+firebase:
+  credential:
+    resource-path: ${sm://projects/ny-dol-wp-work-manager/secrets/firebase-config}
+    api-key: ${sm://projects/ny-dol-wp-work-manager/secrets/firebase-api-key}

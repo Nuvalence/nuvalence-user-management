@@ -37,6 +37,7 @@ public interface UserEntityMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "userRoleEntities", ignore = true)
     @Mapping(target = "customFields", ignore = true)
+    @Mapping(target = "id", ignore = true)
     UserEntity convertUserModelToUserEntity(UserDTO user);
 
     /**

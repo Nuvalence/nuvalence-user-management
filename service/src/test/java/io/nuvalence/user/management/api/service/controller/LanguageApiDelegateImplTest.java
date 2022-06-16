@@ -11,6 +11,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
@@ -26,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
 public class LanguageApiDelegateImplTest {
     @Autowired
@@ -36,6 +37,7 @@ public class LanguageApiDelegateImplTest {
     private ApplicationLanguageService applicationLanguageService;
 
     @Test
+    @WithMockUser
     public void getSupportedLanguages() throws Exception {
         List<LanguageEntity> languages = List.of(
             createLanguage("4e6ba44a-5446-4be9-a4a2-1090a9cca41a", "English", "en"),

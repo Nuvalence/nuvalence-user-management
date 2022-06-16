@@ -24,9 +24,11 @@ import io.nuvalence.user.management.api.service.repository.UserRepository;
 import io.nuvalence.user.management.api.service.repository.UserRoleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -39,14 +41,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import javax.transaction.Transactional;
 
 /**
  * Service for User.
  */
 
 @Component
-@Transactional
 @RequiredArgsConstructor
 @Slf4j
 @SuppressWarnings("checkstyle:ClassFanOutComplexity")
@@ -59,13 +59,20 @@ public class UserService {
     private final RoleRepository roleRepository;
     private final CerbosClient client;
 
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
     /**
      * Creates a User Entity from a user model.
      *
      * @param user represents a user model
      * @return a response code
      */
+    @SuppressWarnings("checkstyle:CyclomaticComplexity")
     public ResponseEntity<Void> createUser(UserCreationRequest user) {
+        if (StringUtils.isBlank(user.getExternalId())) {
+            throw new BusinessLogicException("Missing identifier for user: " + user.getEmail());
+        }
+
         Optional<UserEntity> checkEmail = userRepository.findUserEntityByEmail(user.getEmail());
         if (checkEmail.isPresent()) {
             throw new BusinessLogicException("This Email is already assigned to a user.");
@@ -142,7 +149,6 @@ public class UserService {
 
     /**
      * Deletes a user entity from the DB.
-     *
      * @param userId is a user's id
      * @return a response code
      */
