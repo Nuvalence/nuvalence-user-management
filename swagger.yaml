@@ -473,6 +473,21 @@ paths:
             items:
               $ref: "#/definitions/LanguageDTO"
 
+  /applications:
+    get:
+      tags:
+        - "application"
+      summary: "Return all applications"
+      operationId: "getApplications"
+      responses:
+        "200":
+          description: "Successful operation"
+          schema:
+            type: array
+            example: [ { id: "1234", name: "User Management Application"} ]
+            items:
+              $ref: "#/definitions/ApplicationDTO"
+
   /custom-fields:
     get:
       tags:
@@ -925,3 +940,16 @@ definitions:
         type: string
       refreshToken:
         type: string
+  ApplicationDTO:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+      name:
+        type: string
+        example: "User Management Application"
+      supportedLanguages:
+        type: array
+        items:
+          $ref: '#/definitions/LanguageDTO'
