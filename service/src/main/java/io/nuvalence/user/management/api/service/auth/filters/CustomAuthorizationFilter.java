@@ -19,6 +19,7 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 /**
  * Custom Authorization Filter.
  */
+@SuppressWarnings("checkstyle:CyclomaticComplexity")
 public class CustomAuthorizationFilter extends OncePerRequestFilter {
 
     private final Logger log = LoggerFactory.getLogger(CustomAuthorizationFilter.class);
@@ -30,7 +31,9 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
         // If logging in or token refresh, then ignore authorization.
         if (request.getServletPath().equals("/api/v2/auth/token/refresh")
                 || request.getServletPath().equals("/")
-                || request.getServletPath().equals("/api/v2/cloud-task/user")) {
+                || request.getServletPath().equals("/swagger-ui.html")
+                || request.getServletPath().equals("/api/v2/cloud-task/user")
+                || request.getServletPath().equals("/csrf")) {
             filterChain.doFilter(request, response);
         } else {
             String authorizationHeader = request.getHeader(AUTHORIZATION);
