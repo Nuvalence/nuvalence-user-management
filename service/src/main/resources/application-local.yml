@@ -23,6 +23,11 @@ spring:
       firestore:
         enabled: false
 
+cerbos:
+  baseUrl: "https://cerbos-url.com"
+  username: "cerbosUser"
+  password: "cerbosPassword"
+
 management:
   endpoints:
     web:

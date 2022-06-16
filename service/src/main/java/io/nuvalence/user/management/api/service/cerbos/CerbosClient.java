@@ -100,7 +100,7 @@ public class CerbosClient implements Permissionable {
                 }
             }
         } catch (Exception e) {
-            log.error(e.getMessage());
+            log.error("check ex : {}",e.getMessage());
         }
 
         return false;
@@ -128,7 +128,7 @@ public class CerbosClient implements Permissionable {
 
             return Objects.requireNonNull(response.getBody()).getSuccess() != null;
         } catch (Exception e) {
-            log.error(e.getMessage());
+            log.error("update ex : {}",e.getMessage());
         }
 
         return false;
@@ -155,7 +155,7 @@ public class CerbosClient implements Permissionable {
 
             return Objects.requireNonNull(response.getBody()).getSuccess() != null;
         } catch (Exception e) {
-            log.error(e.getMessage());
+            log.error("removeRole ex : {}",e.getMessage());
         }
 
         return false;
@@ -184,7 +184,7 @@ public class CerbosClient implements Permissionable {
 
             return rolePermissionMap;
         } catch (Exception e) {
-            log.error(e.getMessage());
+            log.error("getRolePermissionMappings ex : {}", e.getMessage());
         }
 
         return Collections.emptyMap();
