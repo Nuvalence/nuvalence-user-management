@@ -1,5 +1,6 @@
 package io.nuvalence.user.management.api.service.service;
 
+import io.nuvalence.user.management.api.service.config.exception.ResourceNotFoundException;
 import io.nuvalence.user.management.api.service.entity.ApplicationEntity;
 import io.nuvalence.user.management.api.service.entity.LanguageEntity;
 import io.nuvalence.user.management.api.service.generated.models.ApplicationDTO;
@@ -13,10 +14,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 /**
@@ -49,6 +54,24 @@ public class ApplicationServiceTest {
 
         assertEquals(3, response.getBody().stream().count());
         assertTrue(response.getStatusCode().is2xxSuccessful());
+    }
+
+    @Test
+    void getApplicationById() {
+        when(applicationRepository.findById(any())).thenReturn(Optional.of(createApplication("TEST_1")));
+
+        ResponseEntity<ApplicationDTO> response = applicationService.getApplicationById(UUID.randomUUID());
+        assertTrue(response.getStatusCode().is2xxSuccessful());
+        assertTrue(Objects.requireNonNull(response.getBody()).getName().equalsIgnoreCase("TEST_1"));
+    }
+
+    @Test
+    void getApplicationById_fails_ifApplicationDoesNotExist() {
+        when(applicationRepository.findById(any())).thenReturn(Optional.empty());
+
+        Exception exception = assertThrows(ResourceNotFoundException.class, () ->
+                applicationService.getApplicationById(UUID.randomUUID()));
+        assertTrue(exception.getMessage().contains("Application not found!"));
     }
 
     private static LanguageEntity createLanguage(String name, String standardId) {

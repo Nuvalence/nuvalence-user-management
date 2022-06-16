@@ -7,25 +7,27 @@ import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 
-import java.util.List;
 import java.util.UUID;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 /**
- * Represents a single application.
+ * Represents a single ApplicationPermission entity.
  */
+
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "application")
-public class ApplicationEntity {
+@Table(name = "application_permission")
+public class ApplicationPermissionEntity {
+
     @Id
     @GeneratedValue(generator = "uuid2")
     @GenericGenerator(name = "uuid2", strategy = "org.hibernate.id.UUIDGenerator")
@@ -33,12 +35,11 @@ public class ApplicationEntity {
     @Column(name = "id", length = 36, insertable = false, updatable = false, nullable = false)
     private UUID id;
 
-    @Column(name = "app_name", nullable = false, unique = true)
-    private String name;
+    @ManyToOne
+    @JoinColumn(name = "application_id", nullable = false)
+    private ApplicationEntity application;
 
-    @OneToMany(mappedBy = "application")
-    private List<ApplicationLanguageEntity> supportedLanguages;
-
-    @OneToMany(mappedBy = "application")
-    private List<ApplicationPermissionEntity> permissions;
+    @ManyToOne
+    @JoinColumn(name = "permission_id", nullable = false)
+    private PermissionEntity permission;
 }

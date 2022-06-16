@@ -2,6 +2,7 @@ package io.nuvalence.user.management.api.service.mapper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.nuvalence.user.management.api.service.entity.ApplicationPreferenceEntity;
+import io.nuvalence.user.management.api.service.entity.PermissionEntity;
 import io.nuvalence.user.management.api.service.entity.RoleEntity;
 import io.nuvalence.user.management.api.service.entity.UserCustomFieldEntity;
 import io.nuvalence.user.management.api.service.entity.UserEntity;
@@ -9,6 +10,7 @@ import io.nuvalence.user.management.api.service.entity.UserPreferenceEntity;
 import io.nuvalence.user.management.api.service.entity.UserRoleEntity;
 import io.nuvalence.user.management.api.service.enums.CustomFieldType;
 import io.nuvalence.user.management.api.service.generated.models.CustomFieldDataType;
+import io.nuvalence.user.management.api.service.generated.models.PermissionDTO;
 import io.nuvalence.user.management.api.service.generated.models.RoleDTO;
 import io.nuvalence.user.management.api.service.generated.models.UserCustomFieldDTO;
 import io.nuvalence.user.management.api.service.generated.models.UserPreferenceDTO;
@@ -26,6 +28,11 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class MapperUtils {
+
+    public static List<PermissionDTO> mapPermissionEntitiesToPermissionList(List<PermissionEntity> permissionEntities) {
+        return permissionEntities.stream().map(PermissionEntityMapper.INSTANCE::permissionEntityToPermissionDto)
+                .collect(Collectors.toList());
+    }
 
     /**
      * Simple list mapper for entity -> dto.

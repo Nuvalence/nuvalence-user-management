@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Routes for application(s).
@@ -20,5 +21,10 @@ public class ApplicationsApiDelegateImpl implements ApplicationsApiDelegate {
     @Override
     public ResponseEntity<List<ApplicationDTO>> getApplications() {
         return applicationService.getApplications();
+    }
+
+    @Override
+    public ResponseEntity<ApplicationDTO> getApplicationById(UUID id) {
+        return applicationService.getApplicationById(id);
     }
 }

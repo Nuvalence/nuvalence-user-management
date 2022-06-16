@@ -2,8 +2,10 @@ package io.nuvalence.user.management.api.service.mapper;
 
 import io.nuvalence.user.management.api.service.entity.ApplicationEntity;
 import io.nuvalence.user.management.api.service.entity.ApplicationLanguageEntity;
+import io.nuvalence.user.management.api.service.entity.ApplicationPermissionEntity;
 import io.nuvalence.user.management.api.service.generated.models.ApplicationDTO;
 import io.nuvalence.user.management.api.service.generated.models.LanguageDTO;
+import io.nuvalence.user.management.api.service.generated.models.PermissionListDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
@@ -27,4 +29,7 @@ public interface ApplicationEntityMapper {
 
     @Mapping(source = "entity.language", target = ".")
     LanguageDTO applicationLanguageEntityToLanguageDto(ApplicationLanguageEntity entity);
+
+    @Mapping(source = "entity.permission", target = ".")
+    PermissionListDTO applicationPermissionEntityToPermissionListDto(ApplicationPermissionEntity entity);
 }
