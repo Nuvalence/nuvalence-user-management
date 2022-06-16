@@ -329,6 +329,35 @@ paths:
           description: "You are unauthorized to make this request"
         "404":
           description: "User not found"
+    put:
+      tags:
+        - "user"
+      summary: "Update user by user Id"
+      operationId: "updateUserById"
+      parameters:
+        - name: "id"
+          in: "path"
+          description: "id of the user to update"
+          required: true
+          type: "string"
+          format: uuid
+        - name: "body"
+          in: "body"
+          description: "user object"
+          required: true
+          schema:
+            $ref: "#/definitions/UserUpdateRequest"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/UserDTO"
+        "400":
+          description: "Invalid request body"
+        "401":
+          description: "You are unauthorized to make this request"
+        "404":
+          description: "User not found"
   /role:
     post:
       tags:
@@ -788,6 +817,15 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/CreateOrUpdateUserCustomFieldDTO'
+  UserUpdateRequest:
+    type: object
+    properties:
+      displayName:
+        type: string
+      email:
+        type: string
+      externalId:
+        type: string
   ValidatePermissionDTO:
     type: object
     required:

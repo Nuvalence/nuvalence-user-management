@@ -55,31 +55,6 @@ public class UserApiDelegateImplTest {
 
     @Test
     @WithMockUser
-    public void addUser() throws Exception {
-        UserCreationRequest user = createNewUserModel();
-        ResponseEntity<Void> res = ResponseEntity.status(200).build();
-        when(userService.createUser(user)).thenReturn(res);
-        final String postBody = new ObjectMapper().writeValueAsString(user);
-
-        mockMvc.perform(
-                post("/api/v2/cloud-task/user")
-                        .content(postBody)
-                        .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().isOk());
-    }
-
-    @Test
-    @WithMockUser
-    public void deleteUserById() throws Exception {
-        UserEntity userEntity = createMockUser();
-        when(userRepository.findById(userEntity.getId())).thenReturn(Optional.of(userEntity));
-
-        mockMvc.perform(delete("/api/v2/cloud-task/user/" + userEntity.getId().toString()))
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    @WithMockUser
     public void getUserById() throws Exception {
         UserEntity userEntity = createMockUser();
         when(userRepository.findById(userEntity.getId())).thenReturn(Optional.of(userEntity));
