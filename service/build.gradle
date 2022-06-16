@@ -37,7 +37,7 @@ dependencies {
 	implementation 'org.apache.commons:commons-lang3:3.12.0'
 	implementation 'com.google.firebase:firebase-admin:8.1.0'
 
-	implementation 'com.google.cloud:spring-cloud-gcp-starter-secretmanager:2.0.10' // Tied to SpringBoot 2.5.7
+	//implementation 'com.google.cloud:spring-cloud-gcp-starter-secretmanager:2.0.10' // Tied to SpringBoot 2.5.7
 	implementation 'com.fasterxml.jackson.core:jackson-databind:2.10.0'
 
 	// Database management
