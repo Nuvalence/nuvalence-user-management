@@ -6,6 +6,7 @@ import io.nuvalence.user.management.api.service.entity.LanguageEntity;
 import io.nuvalence.user.management.api.service.repository.ApplicationLanguagesRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -15,6 +16,7 @@ import java.util.stream.Collectors;
  * Service for retrieving languages.
  */
 @Component
+@Transactional
 @RequiredArgsConstructor
 public class ApplicationLanguageService {
 
