@@ -62,6 +62,7 @@ public class RoleServiceTest {
         RoleEntity roleCaptured = roleCaptor.getValue();
         assertEquals(roleCaptured.getId(), role.getId());
         assertEquals(roleCaptured.getRoleName(), role.getRoleName());
+        assertEquals(roleCaptured.getDisplayName(), role.getDisplayName());
     }
 
     @Test
@@ -221,6 +222,7 @@ public class RoleServiceTest {
     private RoleDTO createRoleDto() {
         RoleDTO role = new RoleDTO();
         role.setRoleName("ROLE_TO_TEST");
+        role.setDisplayName("Role To Test");
         role.setId(UUID.fromString("af102616-4207-4850-adc4-0bf91058a261"));
         role.setPermissions(Arrays.asList("permissionToTest"));
         return role;
@@ -229,6 +231,7 @@ public class RoleServiceTest {
     private RoleEntity createRoleEntity() {
         RoleEntity role = new RoleEntity();
         role.setRoleName("ROLE_TO_TEST");
+        role.setDisplayName("Role To Test");
         role.setId(UUID.fromString("af102616-4207-4850-adc4-0bf91058a261"));
         return role;
     }

@@ -25,6 +25,7 @@ public class ApplicationEntityMapperTest {
         ApplicationEntity applicationEntity = new ApplicationEntity();
         applicationEntity.setId(UUID.randomUUID());
         applicationEntity.setName("APPLICATION_NAME");
+        applicationEntity.setDisplayName("Application Name");
 
         LanguageEntity language = new LanguageEntity();
         language.setId(UUID.randomUUID());
@@ -45,6 +46,7 @@ public class ApplicationEntityMapperTest {
                 .applicationEntityToApplicationDto(applicationEntity);
         assertEquals(applicationEntity.getId(), applicationDto.getId());
         assertEquals(applicationEntity.getName(), applicationDto.getName());
+        assertEquals(applicationEntity.getDisplayName(), applicationDto.getDisplayName());
         assertEquals(applicationEntity.getSupportedLanguages().get(0).getLanguage().getId(),
                 applicationDto.getSupportedLanguages().get(0).getId());
         assertEquals(applicationEntity.getSupportedLanguages().get(0).getLanguage().getLanguageName(),

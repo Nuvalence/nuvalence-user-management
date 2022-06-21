@@ -52,7 +52,7 @@ public class ApplicationsApiDelegateImplTest {
     @Test
     @WithMockUser
     public void getApplicationById() throws Exception {
-        ApplicationDTO application = createApplication("TEST_1");
+        ApplicationDTO application = createApplication("TEST_1", "Test 1");
 
         ResponseEntity<ApplicationDTO> res = ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON).body(application);
@@ -62,20 +62,22 @@ public class ApplicationsApiDelegateImplTest {
         mockMvc.perform(get("/api/v2/applications/" + application.getId().toString()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(String.valueOf(application.getId())))
-                .andExpect(jsonPath("$.name").value(application.getName()));
+                .andExpect(jsonPath("$.name").value(application.getName()))
+                .andExpect(jsonPath("$.displayName").value(application.getDisplayName()));
     }
 
-    private ApplicationDTO createApplication(String name) {
+    private ApplicationDTO createApplication(String name, String displayName) {
         ApplicationDTO app = new ApplicationDTO();
         app.setId(UUID.randomUUID());
         app.setName(name);
+        app.setDisplayName(displayName);
         return app;
     }
 
     private List<ApplicationDTO> createApplications() {
-        ApplicationDTO app0 = createApplication("group_a");
-        ApplicationDTO app1 = createApplication("group_b");
-        ApplicationDTO app2 = createApplication("group_c");
+        ApplicationDTO app0 = createApplication("group_a", "Group A");
+        ApplicationDTO app1 = createApplication("group_b", "Group B");
+        ApplicationDTO app2 = createApplication("group_c", "Group C");
 
         return List.of(app0, app1, app2);
     }

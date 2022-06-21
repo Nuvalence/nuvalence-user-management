@@ -58,11 +58,12 @@ public class ApplicationServiceTest {
 
     @Test
     void getApplicationById() {
-        when(applicationRepository.findById(any())).thenReturn(Optional.of(createApplication("TEST_1")));
+        when(applicationRepository.findById(any())).thenReturn(Optional.of(createApplication("TEST_1", "Test 1")));
 
         ResponseEntity<ApplicationDTO> response = applicationService.getApplicationById(UUID.randomUUID());
         assertTrue(response.getStatusCode().is2xxSuccessful());
         assertTrue(Objects.requireNonNull(response.getBody()).getName().equalsIgnoreCase("TEST_1"));
+        assertEquals("Test 1", Objects.requireNonNull(response.getBody()).getDisplayName());
     }
 
     @Test
@@ -90,17 +91,19 @@ public class ApplicationServiceTest {
         return List.of(language0, language1, language2);
     }
 
-    private static ApplicationEntity createApplication(String name) {
+
+    private static ApplicationEntity createApplication(String name, String displayName) {
         ApplicationEntity app = new ApplicationEntity();
         app.setId(UUID.randomUUID());
         app.setName(name);
+        app.setDisplayName(displayName);
         return app;
     }
 
     private static List<ApplicationEntity> createApplications() {
-        ApplicationEntity app0 = createApplication("group_a");
-        ApplicationEntity app1 = createApplication("group_b");
-        ApplicationEntity app2 = createApplication("group_c");
+        ApplicationEntity app0 = createApplication("group_a", "Group A");
+        ApplicationEntity app1 = createApplication("group_b", "Group B");
+        ApplicationEntity app2 = createApplication("group_c", "Group C");
 
         return List.of(app0, app1, app2);
     }

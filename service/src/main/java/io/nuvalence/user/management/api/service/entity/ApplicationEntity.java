@@ -36,6 +36,9 @@ public class ApplicationEntity {
     @Column(name = "app_name", nullable = false, unique = true)
     private String name;
 
+    @Column(name = "display_name", nullable = false, unique = true)
+    private String displayName;
+
     @OneToMany(mappedBy = "application")
     private List<ApplicationLanguageEntity> supportedLanguages;
 

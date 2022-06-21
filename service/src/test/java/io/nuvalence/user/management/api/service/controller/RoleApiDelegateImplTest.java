@@ -68,7 +68,8 @@ public class RoleApiDelegateImplTest {
                 get("/api/v2/role?resource=default_resource")
                         .contentType(MediaType.APPLICATION_JSON))
                         .andExpect(status().isOk())
-                        .andExpect(jsonPath("$[0].roleName").value(roles.get(0).getRoleName()));
+                        .andExpect(jsonPath("$[0].roleName").value(roles.get(0).getRoleName()))
+                        .andExpect(jsonPath("$[0].displayName").value(roles.get(0).getDisplayName()));
     }
 
     @Test
@@ -107,6 +108,7 @@ public class RoleApiDelegateImplTest {
     private RoleDTO createMockRoleDto() {
         RoleDTO role = new RoleDTO();
         role.setRoleName("ROLE_TO_TEST");
+        role.setDisplayName("Role To Test");
         role.setId(UUID.randomUUID());
         return role;
     }

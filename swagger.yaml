@@ -888,11 +888,14 @@ definitions:
     type: object
     required:
       - roleName
+      - displayName
     properties:
       id:
         type: string
         format: uuid
       roleName:
+        type: string
+      displayName:
         type: string
       permissions:
         type: array
@@ -1149,11 +1152,17 @@ definitions:
         type: string
   ApplicationDTO:
     type: object
+    required:
+      - name
+      - displayName
     properties:
       id:
         type: string
         format: uuid
       name:
+        type: string
+        example: "user_management_application"
+      displayName:
         type: string
         example: "User Management Application"
       supportedLanguages:

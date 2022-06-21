@@ -34,8 +34,11 @@ public class RoleEntity {
     @Column(name = "id", length = 36, insertable = false, updatable = false, nullable = false)
     private UUID id;
 
-    @Column(name = "role_name", nullable = false)
+    @Column(name = "role_name", nullable = false, unique = true)
     private String roleName;
+
+    @Column(name = "display_name", nullable = false, unique = true)
+    private String displayName;
 
     @Column(name = "linked_application")
     private UUID linkedApplication;
