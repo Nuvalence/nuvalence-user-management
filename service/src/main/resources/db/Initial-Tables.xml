@@ -359,4 +359,26 @@
                              columnNames="permission_id, application_id"
                              constraintName="Unique_Application_To_Permission"/>
     </changeSet>
+    <changeSet id="add-display_name-to-role-and-application-dtos" author="hharris">
+        <addColumn tableName="role">
+            <column name="display_name" type="varchar(255)">
+            </column>
+        </addColumn>
+        <addColumn tableName="application">
+            <column name="display_name" type="varchar(255)">
+            </column>
+        </addColumn>
+        <sql>
+            UPDATE role SET display_name = 'Role 1' WHERE role_name = 'ROLE_1';
+            UPDATE role SET display_name = 'Role 2' WHERE role_name = 'ROLE_2';
+            UPDATE role SET display_name = role_name WHERE display_name IS NULL;
+            ALTER TABLE role ALTER COLUMN display_name SET NOT NULL;
+
+            UPDATE application SET display_name = 'Application 01' WHERE app_name = 'app01';
+            UPDATE application SET display_name = 'Application 02' WHERE app_name = 'app02';
+            UPDATE application SET display_name = 'Application 03' WHERE app_name = 'app03';
+            UPDATE application SET display_name = app_name WHERE display_name IS NULL;
+            ALTER TABLE application ALTER COLUMN display_name SET NOT NULL;
+        </sql>
+    </changeSet>
 </databaseChangeLog>

@@ -17,10 +17,12 @@ public class RoleEntityMapperTest {
     public void shouldMapRoleEntityToRoleDto() {
         RoleEntity role = new RoleEntity();
         role.setRoleName("ROLE_TO_TEST");
+        role.setDisplayName("Role To Test");
         role.setId(UUID.fromString("af102616-4207-4850-adc4-0bf91058a261"));
 
         RoleDTO roleModel = RoleEntityMapper.INSTANCE.roleEntityToRoleDto(role);
         assertEquals(role.getRoleName(), roleModel.getRoleName());
+        assertEquals(role.getDisplayName(), roleModel.getDisplayName());
         assertEquals(role.getId(), roleModel.getId());
     }
 
@@ -28,10 +30,12 @@ public class RoleEntityMapperTest {
     public void shouldMapRoleDtoToRoleEntity() {
         RoleDTO role = new RoleDTO();
         role.setRoleName("ROLE_TO_TEST");
+        role.setDisplayName("Role To Test");
         role.setId(UUID.fromString("af102616-4207-4850-adc4-0bf91058a261"));
 
         RoleEntity roleEntity = RoleEntityMapper.INSTANCE.roleDtoToRoleEntity(role);
         assertEquals(role.getRoleName(), roleEntity.getRoleName());
+        assertEquals(role.getDisplayName(), roleEntity.getDisplayName());
         assertEquals(role.getId(), roleEntity.getId());
     }
 
