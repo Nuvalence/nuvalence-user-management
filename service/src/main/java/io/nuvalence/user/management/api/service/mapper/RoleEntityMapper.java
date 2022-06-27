@@ -1,7 +1,6 @@
 package io.nuvalence.user.management.api.service.mapper;
 
 import io.nuvalence.user.management.api.service.entity.RoleEntity;
-import io.nuvalence.user.management.api.service.generated.models.RoleCreationRequest;
 import io.nuvalence.user.management.api.service.generated.models.RoleDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -33,12 +32,4 @@ public interface RoleEntityMapper {
      */
     @Mapping(target = "userRoleEntities", ignore = true)
     RoleEntity roleDtoToRoleEntity(RoleDTO role);
-
-    /**
-     * Converts a Role Creation Request into a Role DTO.
-     *
-     * @param role Role in RoleCreationRequest form
-     * @return Role Entity.
-     */
-    RoleEntity roleCreationRequestToRoleEntity(RoleCreationRequest role);
 }

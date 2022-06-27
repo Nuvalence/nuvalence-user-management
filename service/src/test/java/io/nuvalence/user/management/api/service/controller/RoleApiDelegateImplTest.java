@@ -1,7 +1,6 @@
 package io.nuvalence.user.management.api.service.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.nuvalence.user.management.api.service.generated.models.RoleCreationRequest;
 import io.nuvalence.user.management.api.service.generated.models.RoleDTO;
 import io.nuvalence.user.management.api.service.generated.models.UserDTO;
 import io.nuvalence.user.management.api.service.service.RoleService;
@@ -44,16 +43,16 @@ public class RoleApiDelegateImplTest {
     @Test
     @WithMockUser
     public void addRole() throws Exception {
-        RoleCreationRequest roleCreationRequest = new RoleCreationRequest();
+        RoleDTO role = createMockRoleDto();
 
         ResponseEntity<Void> res = ResponseEntity.status(200).build();
-        when(roleService.addRole(roleCreationRequest)).thenReturn(res);
-        final String postBody = new ObjectMapper().writeValueAsString(roleCreationRequest);
+        when(roleService.addRole(role)).thenReturn(res);
+        final String postBody = new ObjectMapper().writeValueAsString(role);
 
         mockMvc.perform(
-            post("/api/v2/role")
-                .content(postBody)
-                .contentType(MediaType.APPLICATION_JSON)
+                post("/api/v2/role")
+                        .content(postBody)
+                        .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(status().isOk());
     }
 

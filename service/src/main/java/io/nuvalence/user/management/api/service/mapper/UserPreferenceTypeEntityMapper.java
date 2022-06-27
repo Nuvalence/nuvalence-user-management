@@ -3,6 +3,7 @@ package io.nuvalence.user.management.api.service.mapper;
 import io.nuvalence.user.management.api.service.entity.UserPreferenceTypeEntity;
 import io.nuvalence.user.management.api.service.generated.models.UserPreferenceTypeDTO;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 /**
@@ -12,7 +13,6 @@ import org.mapstruct.factory.Mappers;
 public interface UserPreferenceTypeEntityMapper {
     UserPreferenceTypeEntityMapper INSTANCE = Mappers.getMapper(UserPreferenceTypeEntityMapper.class);
 
+    @Mapping(target = "options", ignore = true)
     UserPreferenceTypeDTO userPreferenceTypeEntityToDto(UserPreferenceTypeEntity preferenceType);
-
-    UserPreferenceTypeEntity userPreferenceTypeDtoToEntity(UserPreferenceTypeDTO preferenceTypeDto);
 }

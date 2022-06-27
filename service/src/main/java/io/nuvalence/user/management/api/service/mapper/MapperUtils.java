@@ -6,6 +6,8 @@ import io.nuvalence.user.management.api.service.entity.RoleEntity;
 import io.nuvalence.user.management.api.service.entity.UserCustomFieldEntity;
 import io.nuvalence.user.management.api.service.entity.UserEntity;
 import io.nuvalence.user.management.api.service.entity.UserPreferenceEntity;
+import io.nuvalence.user.management.api.service.entity.UserPreferenceOptionEntity;
+import io.nuvalence.user.management.api.service.entity.UserPreferenceTypeEntity;
 import io.nuvalence.user.management.api.service.entity.UserRoleEntity;
 import io.nuvalence.user.management.api.service.enums.CustomFieldType;
 import io.nuvalence.user.management.api.service.generated.models.CustomFieldDataType;
@@ -13,12 +15,15 @@ import io.nuvalence.user.management.api.service.generated.models.PermissionDTO;
 import io.nuvalence.user.management.api.service.generated.models.RoleDTO;
 import io.nuvalence.user.management.api.service.generated.models.UserCustomFieldDTO;
 import io.nuvalence.user.management.api.service.generated.models.UserPreferenceDTO;
+import io.nuvalence.user.management.api.service.generated.models.UserPreferenceTypeDTO;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -70,35 +75,47 @@ public class MapperUtils {
      *
      * @param userPreference User preferences.
      * @param appPreferences Application preferences.
+     * @param userId User ID.
+     * @param appId Application ID.
      * @return Updated preferences.
      */
-    public static UserPreferenceDTO overlapPreferences(UserPreferenceEntity userPreference,
-                                                       UserPreferenceEntity appPreferences) {
-        return UserPreferenceEntityMapper.INSTANCE.userPreferencesEntityToDto(
-                overlapPreferenceEntities(userPreference, appPreferences)
-        );
+    public static UserPreferenceDTO overlapPreferences(List<UserPreferenceEntity> userPreference,
+                                                       List<UserPreferenceEntity> appPreferences,
+                                                       UUID userId, UUID appId) {
+        List<UserPreferenceEntity> preferences = overlapPreferenceEntities(userPreference, appPreferences);
+        UserPreferenceDTO preferenceDto = new UserPreferenceDTO();
+        preferenceDto.putAll(preferences.stream().collect(
+                Collectors.toMap(p -> p.getType().getName(), p -> p.getOption().getValue())
+        ));
+
+        if (!preferences.isEmpty()) {
+            preferenceDto.setUserId(preferences.get(0).getUser().getId());
+            if (preferences.get(0).getApplication() != null) {
+                preferenceDto.setApplicationId(preferences.get(0).getApplication().getId());
+            }
+        }
+        preferenceDto.setUserId(userId);
+        preferenceDto.setApplicationId(appId);
+        return preferenceDto;
     }
 
     /**
-     * Given two entities, merge appPreferences into userPreference if appPreference's respective field is not null.
+     * Given two entities, merge appPreferences into userPreferences if appPreference's respective field is not null.
      *
-     * @param userPreference User Preferences.
+     * @param userPreferences User Preferences.
      * @param appPreferences Application Preferences.
      * @return Merged preferences.
      */
-    public static UserPreferenceEntity overlapPreferenceEntities(UserPreferenceEntity userPreference,
-                                                                 UserPreferenceEntity appPreferences) {
-        UserPreferenceEntity updatedPreferences = new UserPreferenceEntity();
-        updatedPreferences.setId(userPreference.getId());
-        //updatedPreferences.setCommunicationPreference(userPreference.getCommunicationPreference());
-        //updatedPreferences.setLanguage(
-        //  (appPreferences.getLanguage() != null) ? appPreferences.getLanguage() : userPreference.getLanguage()
-        //);
+    public static List<UserPreferenceEntity> overlapPreferenceEntities(List<UserPreferenceEntity> userPreferences,
+                                                                 List<UserPreferenceEntity> appPreferences) {
+        List<UserPreferenceEntity> updatedPreferences = new ArrayList<>(userPreferences);
+        appPreferences.forEach(a -> {
+            updatedPreferences.removeIf(p -> p.getType().getId().compareTo(a.getType().getId()) == 0);
+            updatedPreferences.add(a);
+        });
 
         return updatedPreferences;
     }
-
-
 
     /**
      * Simple list mapper for user => role list.
@@ -204,5 +221,26 @@ public class MapperUtils {
         }
 
         return dto;
+    }
+
+    /**
+     * Maps between {@link UserPreferenceTypeEntity} to {@link UserPreferenceTypeDTO}.
+     *
+     * @param type a user preference type entity
+     * @return a user preference type dto
+     */
+    public static UserPreferenceTypeDTO mapUserPreferenceTypeEntityToDto(UserPreferenceTypeEntity type) {
+        UserPreferenceTypeDTO typeDto = UserPreferenceTypeEntityMapper.INSTANCE.userPreferenceTypeEntityToDto(type);
+        List<UserPreferenceOptionEntity> typeOptions = type.getUserPreferenceOptionEntities();
+        if (typeOptions != null && !typeOptions.isEmpty()) {
+            List<String> options = typeOptions
+                    .stream().map(UserPreferenceOptionEntity::getValue)
+                    .collect(Collectors.toList());
+            typeDto.setOptions(options);
+        } else {
+            typeDto.setOptions(Collections.emptyList());
+        }
+
+        return typeDto;
     }
 }

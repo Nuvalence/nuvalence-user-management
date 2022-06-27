@@ -32,12 +32,12 @@ public class UserPreferenceTypeEntity {
     @GenericGenerator(name = "uuid2", strategy = "org.hibernate.id.UUIDGenerator")
     @Type(type = "uuid-char")
     @Column(name = "id", length = 36, insertable = false, updatable = false, nullable = false)
-    public UUID id;
+    private UUID id;
 
     @Column(name = "name", nullable = false, unique = true)
-    public String name;
+    private String name;
 
     @OneToMany(mappedBy = "userPreferenceType")
-    public List<UserPreferenceOptionEntity> userPreferenceOptionEntities;
+    private List<UserPreferenceOptionEntity> userPreferenceOptionEntities;
 
 }

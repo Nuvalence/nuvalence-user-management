@@ -112,26 +112,22 @@
             <column name="user_id" type="uuid">
                 <constraints foreignKeyName="fk_preference_user_id"
                              references="user_table(id)"
-                             nullable="false"
-                             unique="true"/>
-            </column>
-            <column name="user_preference_type_id" type="uuid">
-                <constraints foreignKeyName="fk_preference_type_id"
-                             references="user_preference_type(id)"
-                             nullable="false"
-                             unique="false"/>
-            </column>
-            <column name="user_preference_option_id" type="uuid">
-                <constraints foreignKeyName="fk_preference_option_id"
-                             references="user_preference_option(id)"
-                             nullable="false"
-                             unique="false"/>
+                             nullable="false" />
             </column>
             <column name="application_id" type="uuid">
                 <constraints foreignKeyName="fk_preference_application_id"
                              references="application(id)"
-                             nullable="true"
-                             unique="false"/>
+                             nullable="true" />
+            </column>
+            <column name="user_preference_type_id" type="uuid">
+                <constraints foreignKeyName="fk_preference_type_id"
+                             references="user_preference_type(id)"
+                             nullable="false" />
+            </column>
+            <column name="user_preference_option_id" type="uuid">
+                <constraints foreignKeyName="fk_preference_option_id"
+                             references="user_preference_option(id)"
+                             nullable="false" />
             </column>
         </createTable>
         <createTable tableName="application_language">
@@ -212,7 +208,11 @@
             INSERT INTO user_preference_option(id, option_value, user_preference_type_id)
             VALUES ('1843c690-1041-48c3-a4a5-428d24924b98', 'phone', '3505d910-a479-423b-b3f8-a3d16798a651'),
                    ('3505d910-a479-423b-b3f8-a3d16798a651', 'text/sms', '3505d910-a479-423b-b3f8-a3d16798a651'),
-                   ('0e3929a9-fabc-4d73-8cfe-14c89c51b531', 'email', '3505d910-a479-423b-b3f8-a3d16798a651')
+                   ('0e3929a9-fabc-4d73-8cfe-14c89c51b531', 'email', '3505d910-a479-423b-b3f8-a3d16798a651');
+
+            INSERT INTO user_preference_option(id, option_value, user_preference_type_id)
+            SELECT id, language_standard_id, 'e8dc1b46-65a1-4e1f-9516-009560a50a2f'
+            FROM language
         </sql>
     </changeSet>
     <changeSet id="custom-fields-introduction" author="open-source-initial-author">

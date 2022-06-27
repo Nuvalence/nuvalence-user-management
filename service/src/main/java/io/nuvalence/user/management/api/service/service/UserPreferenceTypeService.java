@@ -2,7 +2,7 @@ package io.nuvalence.user.management.api.service.service;
 
 import io.nuvalence.user.management.api.service.entity.UserPreferenceTypeEntity;
 import io.nuvalence.user.management.api.service.generated.models.UserPreferenceTypeDTO;
-import io.nuvalence.user.management.api.service.mapper.UserPreferenceTypeEntityMapper;
+import io.nuvalence.user.management.api.service.mapper.MapperUtils;
 import io.nuvalence.user.management.api.service.repository.UserPreferenceTypeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,10 +32,9 @@ public class UserPreferenceTypeService {
     public ResponseEntity<List<UserPreferenceTypeDTO>> getAllUserPreferenceTypes() {
         List<UserPreferenceTypeEntity> allUserPreferenceTypes = userPreferenceTypeRepository.findAll();
 
-        List<UserPreferenceTypeDTO> userPreferenceTypes = allUserPreferenceTypes.stream().map(u -> {
-            UserPreferenceTypeDTO userPref = UserPreferenceTypeEntityMapper.INSTANCE.userPreferenceTypeEntityToDto(u);
-            return userPref;
-        }).collect(Collectors.toList());
+        List<UserPreferenceTypeDTO> userPreferenceTypes = allUserPreferenceTypes
+                .stream().map(MapperUtils::mapUserPreferenceTypeEntityToDto)
+                .collect(Collectors.toList());
 
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(userPreferenceTypes);
     }

@@ -12,6 +12,8 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 /**
@@ -31,15 +33,19 @@ public class UserPreferenceEntity {
     @Column(name = "id", length = 36, insertable = false, updatable = false, nullable = false)
     private UUID id;
 
-    @Column(name = "user_id")
-    private UUID userId;
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private UserEntity user;
 
-    @Column(name = "user_preference_type_id", nullable = false)
-    private UUID userPreferenceTypeId;
+    @ManyToOne
+    @JoinColumn(name = "user_preference_type_id", nullable = false)
+    private UserPreferenceTypeEntity type;
 
-    @Column(name = "user_preference_option_id", nullable = false)
-    private UUID userPreferenceOptionId;
+    @ManyToOne
+    @JoinColumn(name = "user_preference_option_id", nullable = false)
+    private UserPreferenceOptionEntity option;
 
-    @Column(name = "application_id")
-    private UUID applicationId;
+    @ManyToOne
+    @JoinColumn(name = "application_id", nullable = true)
+    private ApplicationEntity application;
 }

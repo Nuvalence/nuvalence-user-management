@@ -34,10 +34,10 @@ public class ApplicationLanguageEntity {
     private UUID id;
 
     @ManyToOne
-    @JoinColumn(name = "application_id", nullable = false)
+    @JoinColumn(name = "app_id", nullable = false)
     private ApplicationEntity application;
 
     @ManyToOne
-    @JoinColumn(name = "language_id", nullable = false)
+    @JoinColumn(name = "lang_id", nullable = false)
     private LanguageEntity language;
 }

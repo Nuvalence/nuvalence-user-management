@@ -3,20 +3,11 @@ package io.nuvalence.user.management.api.service.service;
 import io.nuvalence.user.management.api.service.cerbos.CerbosClient;
 import io.nuvalence.user.management.api.service.config.exception.BusinessLogicException;
 import io.nuvalence.user.management.api.service.config.exception.ResourceNotFoundException;
-import io.nuvalence.user.management.api.service.entity.ApplicationEntity;
-import io.nuvalence.user.management.api.service.entity.ApplicationPermissionEntity;
-import io.nuvalence.user.management.api.service.entity.PermissionEntity;
 import io.nuvalence.user.management.api.service.entity.RoleEntity;
 import io.nuvalence.user.management.api.service.entity.UserEntity;
 import io.nuvalence.user.management.api.service.entity.UserRoleEntity;
-import io.nuvalence.user.management.api.service.generated.models.RoleApplicationDTO;
-import io.nuvalence.user.management.api.service.generated.models.RoleCreationRequest;
 import io.nuvalence.user.management.api.service.generated.models.RoleDTO;
-import io.nuvalence.user.management.api.service.generated.models.RoleUpdateRequest;
 import io.nuvalence.user.management.api.service.generated.models.UserDTO;
-import io.nuvalence.user.management.api.service.repository.ApplicationPermissionRepository;
-import io.nuvalence.user.management.api.service.repository.ApplicationRepository;
-import io.nuvalence.user.management.api.service.repository.PermissionRepository;
 import io.nuvalence.user.management.api.service.repository.RoleRepository;
 import io.nuvalence.user.management.api.service.repository.UserRoleRepository;
 import org.junit.jupiter.api.Test;
@@ -30,7 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -49,15 +40,6 @@ public class RoleServiceTest {
     private RoleRepository roleRepository;
 
     @Mock
-    private ApplicationRepository applicationRepository;
-
-    @Mock
-    private ApplicationPermissionRepository applicationPermissionRepository;
-
-    @Mock
-    private PermissionRepository permissionRepository;
-
-    @Mock
     private UserRoleRepository userRoleRepository;
 
     @Mock
@@ -72,138 +54,67 @@ public class RoleServiceTest {
     // Add Role.
     @Test
     public void addRole_addsRoleIfValid() {
-        RoleCreationRequest roleCreationRequest = createRoleCreationRequest();
-        when(client.updateRolePermissionMappings(
-            ArgumentMatchers.anyString(),
-            ArgumentMatchers.anyString(),
-            any()))
-            .thenReturn(true);
+        RoleDTO role = createRoleDto();
 
-        RoleApplicationDTO roleApplicationDTO = createRoleApplicationDTO();
-        roleCreationRequest.setApplications(List.of(roleApplicationDTO));
-        ApplicationEntity applicationEntity = createApplicationEntity();
-        applicationEntity.setId(UUID.fromString("ad00dbd6-f7dc-11ec-b939-0242ac120002"));
-        List<UUID> appIds = List.of(roleApplicationDTO.getApplicationId());
-        List<ApplicationEntity> applications = List.of(applicationEntity);
-        when(applicationRepository.findAllById(appIds))
-            .thenReturn(applications);
-        PermissionEntity permissionEntity = createPermissionEntity();
-        when(permissionRepository.findByPermissionName(roleApplicationDTO.getPermissions().get(0)))
-            .thenReturn(Optional.of(permissionEntity));
-        ApplicationPermissionEntity applicationPermissionEntity = createApplicationPermissionEntity(applicationEntity,
-            permissionEntity);
-        List<ApplicationPermissionEntity> applicationPermissionEntities =
-            new ArrayList<>();
-        applicationPermissionEntities.add(applicationPermissionEntity);
-        when(applicationPermissionRepository.findAll())
-            .thenReturn(applicationPermissionEntities);
-
-        ResponseEntity<Void> res = roleService.addRole(roleCreationRequest);
-        assertEquals(HttpStatus.OK, res.getStatusCode());
+        ResponseEntity<Void> res = roleService.addRole(role);
+        assertEquals(res.getStatusCode(), HttpStatus.OK);
         verify(roleRepository).save(roleCaptor.capture());
         RoleEntity roleCaptured = roleCaptor.getValue();
-
-        assertEquals(roleCreationRequest.getRoleName(), roleCaptured.getRoleName());
-        assertEquals(roleCreationRequest.getDisplayName(), roleCaptured.getDisplayName());
+        assertEquals(roleCaptured.getId(), role.getId());
+        assertEquals(roleCaptured.getRoleName(), role.getRoleName());
+        assertEquals(roleCaptured.getDisplayName(), role.getDisplayName());
     }
 
     @Test
     public void addRole_fails_ifRoleExists() {
-        RoleCreationRequest role = createRoleCreationRequest();
+        RoleDTO role = createRoleDto();
 
         when(roleRepository.findByRoleName(role.getRoleName())).thenReturn(new RoleEntity());
 
-        Exception exception = assertThrows(BusinessLogicException.class, () -> roleService.addRole(role));
-        assertEquals("This role already exists.", exception.getMessage());
+        Exception exception = assertThrows(BusinessLogicException.class, () -> {
+            roleService.addRole(role);
+        });
+        assertEquals(exception.getMessage(), "This role already exists.");
     }
 
     // Update role
     @Test
     public void updateRole_updatesRoleIfValid() {
-        RoleEntity roleEntity = createRoleEntity();
+        RoleDTO role = createRoleDto();
         when(client.updateRolePermissionMappings(
-            ArgumentMatchers.anyString(),
-            ArgumentMatchers.anyString(),
-            any()))
-            .thenReturn(true);
-        when(roleRepository.findById(roleEntity.getId())).thenReturn(Optional.of(createRoleEntity()));
+                ArgumentMatchers.anyString(),
+                ArgumentMatchers.anyString(),
+                any()))
+                .thenReturn(true);
+        when(roleRepository.findById(role.getId())).thenReturn(Optional.of(createRoleEntity()));
 
-        RoleApplicationDTO roleApplicationDTO = new RoleApplicationDTO();
-        roleApplicationDTO.setApplicationId(UUID.fromString("ad00dbd6-f7dc-11ec-b939-0242ac120002"));
-        roleApplicationDTO.setPermissions(List.of("Invalid_Permission"));
-        RoleUpdateRequest roleUpdateRequest = new RoleUpdateRequest();
-        roleUpdateRequest.setApplications(List.of(roleApplicationDTO));
-        ApplicationEntity applicationEntity = createApplicationEntity();
-        applicationEntity.setId(UUID.fromString("ad00dbd6-f7dc-11ec-b939-0242ac120002"));
-        PermissionEntity permissionEntity = createPermissionEntity();
-        List<UUID> appIds = List.of(roleApplicationDTO.getApplicationId());
-        List<ApplicationEntity> applications = List.of(applicationEntity);
-        when(applicationRepository.findAllById(appIds))
-            .thenReturn(applications);
-        when(permissionRepository.findByPermissionName(roleApplicationDTO.getPermissions().get(0)))
-            .thenReturn(Optional.of(permissionEntity));
-        ApplicationPermissionEntity applicationPermissionEntity = createApplicationPermissionEntity(applicationEntity,
-            permissionEntity);
-        List<ApplicationPermissionEntity> applicationPermissionEntities =
-            new ArrayList<>();
-        applicationPermissionEntities.add(applicationPermissionEntity);
-        when(applicationPermissionRepository.findAll())
-            .thenReturn(applicationPermissionEntities);
-
-        ResponseEntity<Void> response = roleService.updateRole(roleEntity.getId(), roleUpdateRequest);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        ResponseEntity<Void> response = roleService.updateRole(role.getId(), role, "default_resource");
+        assertEquals(response.getStatusCode(), HttpStatus.OK);
     }
 
     @Test
     public void updateRole_fails_ifInvalidRoleId() {
-        RoleEntity roleEntity = createRoleEntity();
-        RoleUpdateRequest roleUpdateRequest = new RoleUpdateRequest();
+        RoleDTO role = createRoleDto();
 
-        when(roleRepository.findById(roleEntity.getId())).thenReturn(Optional.empty());
+        when(roleRepository.findById(role.getId())).thenReturn(Optional.empty());
 
-        Exception exception = assertThrows(BusinessLogicException.class, () ->
-            roleService.updateRole(roleEntity.getId(), roleUpdateRequest));
-        assertEquals("This role does not exist.", exception.getMessage());
-    }
-
-    @Test
-    public void updateRole_fails_ifInvalidApplication() {
-        RoleEntity roleEntity = createRoleEntity();
-        RoleUpdateRequest roleUpdateRequest = new RoleUpdateRequest();
-
-        when(roleRepository.findById(roleEntity.getId())).thenReturn(Optional.of(createRoleEntity()));
-
-        RoleApplicationDTO roleApplicationDTO = new RoleApplicationDTO();
-        roleApplicationDTO.setApplicationId(UUID.fromString("ad00dbd6-f7dc-11ec-b939-0242ac120002"));
-        roleUpdateRequest.setApplications(List.of(roleApplicationDTO));
-
-        Exception exception = assertThrows(BusinessLogicException.class, () ->
-            roleService.updateRole(roleEntity.getId(), roleUpdateRequest));
-        assertEquals(
-            "The provided application id 'ad00dbd6-f7dc-11ec-b939-0242ac120002' is invalid.",
-            exception.getMessage());
+        Exception exception = assertThrows(BusinessLogicException.class, () -> {
+            roleService.updateRole(role.getId(), role, "default_resource");
+        });
+        assertEquals(exception.getMessage(), "This role does not exist.");
     }
 
     @Test
     public void updateRole_fails_ifInvalidPermission() {
-        RoleEntity roleEntity = createRoleEntity();
+        RoleDTO role = createRoleDto();
+        role.setPermissions(Arrays.asList("permissionToFail"));
 
-        when(roleRepository.findById(roleEntity.getId())).thenReturn(Optional.of(createRoleEntity()));
+        when(roleRepository.findById(role.getId())).thenReturn(Optional.of(createRoleEntity()));
 
-        RoleApplicationDTO roleApplicationDTO = new RoleApplicationDTO();
-        roleApplicationDTO.setApplicationId(UUID.fromString("ad00dbd6-f7dc-11ec-b939-0242ac120002"));
-        roleApplicationDTO.setPermissions(List.of("Invalid_Role"));
-        RoleUpdateRequest roleUpdateRequest = new RoleUpdateRequest();
-        roleUpdateRequest.setApplications(List.of(roleApplicationDTO));
-        ApplicationEntity applicationEntity = createApplicationEntity();
-        applicationEntity.setId(UUID.fromString("ad00dbd6-f7dc-11ec-b939-0242ac120002"));
-        List<UUID> appIds = List.of(roleApplicationDTO.getApplicationId());
-        List<ApplicationEntity> applications = List.of(applicationEntity);
-        when(applicationRepository.findAllById(appIds))
-            .thenReturn(applications);
-        Exception exception = assertThrows(BusinessLogicException.class, () ->
-            roleService.updateRole(roleEntity.getId(), roleUpdateRequest));
-        assertEquals("The provided permission 'Invalid_Role' is invalid.", exception.getMessage());
+        Exception exception = assertThrows(BusinessLogicException.class, () -> {
+            roleService.updateRole(role.getId(), role, "default_resource");
+        });
+        assertEquals(exception.getMessage(), "The permission(s) are invalid.");
     }
 
     // Get All Roles.
@@ -313,7 +224,7 @@ public class RoleServiceTest {
         role.setRoleName("ROLE_TO_TEST");
         role.setDisplayName("Role To Test");
         role.setId(UUID.fromString("af102616-4207-4850-adc4-0bf91058a261"));
-        role.setPermissions(List.of("permissionToTest"));
+        role.setPermissions(Arrays.asList("permissionToTest"));
         return role;
     }
 
@@ -322,16 +233,6 @@ public class RoleServiceTest {
         role.setRoleName("ROLE_TO_TEST");
         role.setDisplayName("Role To Test");
         role.setId(UUID.fromString("af102616-4207-4850-adc4-0bf91058a261"));
-        return role;
-    }
-
-    private RoleCreationRequest createRoleCreationRequest() {
-        RoleCreationRequest role = new RoleCreationRequest();
-        role.setRoleName("COMPLAINANT");
-        role.setDisplayName("Complainant");
-        RoleApplicationDTO raDTO = new RoleApplicationDTO();
-        raDTO.setPermissions(List.of("TransactionManager_viewAll"));
-        role.setApplications(List.of(raDTO));
         return role;
     }
 
@@ -355,35 +256,5 @@ public class RoleServiceTest {
         userRoleEntity.setUser(user);
         userRoleEntity.setRole(createRoleEntity());
         return userRoleEntity;
-    }
-
-    private RoleApplicationDTO createRoleApplicationDTO() {
-        RoleApplicationDTO roleApplicationDTO = new RoleApplicationDTO();
-        roleApplicationDTO.setApplicationId(UUID.fromString("ad00dbd6-f7dc-11ec-b939-0242ac120002"));
-        roleApplicationDTO.setPermissions(List.of("Valid_Permission"));
-        return roleApplicationDTO;
-    }
-
-    private PermissionEntity createPermissionEntity() {
-        PermissionEntity entity = new PermissionEntity();
-        entity.setName("Test Permission");
-        entity.setId(UUID.randomUUID());
-        return entity;
-    }
-
-    private ApplicationEntity createApplicationEntity() {
-        ApplicationEntity entity = new ApplicationEntity();
-        entity.setName("test_application");
-        entity.setId(UUID.randomUUID());
-        return entity;
-    }
-
-    private ApplicationPermissionEntity createApplicationPermissionEntity(ApplicationEntity application,
-                                                                          PermissionEntity permission) {
-        ApplicationPermissionEntity entity = new ApplicationPermissionEntity();
-        entity.setId(UUID.randomUUID());
-        entity.setApplication(application);
-        entity.setPermission(permission);
-        return entity;
     }
 }

@@ -1,13 +1,16 @@
 package io.nuvalence.user.management.api.service.mapper;
 
+import io.nuvalence.user.management.api.service.entity.ApplicationEntity;
 import io.nuvalence.user.management.api.service.entity.CustomFieldDataTypeEntity;
 import io.nuvalence.user.management.api.service.entity.CustomFieldEntity;
 import io.nuvalence.user.management.api.service.entity.CustomFieldOptionEntity;
 import io.nuvalence.user.management.api.service.entity.CustomFieldTypeEntity;
-import io.nuvalence.user.management.api.service.entity.LanguageEntity;
 import io.nuvalence.user.management.api.service.entity.RoleEntity;
 import io.nuvalence.user.management.api.service.entity.UserCustomFieldEntity;
+import io.nuvalence.user.management.api.service.entity.UserEntity;
 import io.nuvalence.user.management.api.service.entity.UserPreferenceEntity;
+import io.nuvalence.user.management.api.service.entity.UserPreferenceOptionEntity;
+import io.nuvalence.user.management.api.service.entity.UserPreferenceTypeEntity;
 import io.nuvalence.user.management.api.service.generated.models.RoleDTO;
 import io.nuvalence.user.management.api.service.generated.models.UserCustomFieldDTO;
 import io.nuvalence.user.management.api.service.generated.models.UserPreferenceDTO;
@@ -15,8 +18,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -50,27 +55,23 @@ public class MapperUtilsTest {
      */
     @Test
     public void overlapPreferences_overlapping() {
-        LanguageEntity language = new LanguageEntity();
-        language.setId(UUID.randomUUID());
-        language.setLanguageName("Greek");
-        language.setLanguageStandardId("el");
+        UserEntity user = new UserEntity();
+        user.setId(UUID.randomUUID());
 
-        LanguageEntity backupLanguage = new LanguageEntity();
-        backupLanguage.setId(UUID.randomUUID());
-        backupLanguage.setLanguageName("English");
-        backupLanguage.setLanguageStandardId("en");
+        ApplicationEntity application = new ApplicationEntity();
+        application.setId(UUID.randomUUID());
 
-        UserPreferenceEntity preference = new UserPreferenceEntity();
-        preference.setId(UUID.randomUUID());
+        List<UserPreferenceEntity> userPreferences = createUserPreferences(user);
+        List<UserPreferenceEntity> userApplicationPreferences = createUserApplicationPreferences(user, application);
 
-        UserPreferenceEntity applicationPreferences = new UserPreferenceEntity();
-        applicationPreferences.setId(UUID.randomUUID());
+        UserPreferenceDTO expected = new UserPreferenceDTO();
+        expected.userId(user.getId());
+        expected.applicationId(application.getId());
+        expected.putAll(userApplicationPreferences.stream()
+                .collect(Collectors.toMap(a -> a.getType().getName(), a -> a.getOption().getValue())));
 
-        UserPreferenceDTO expected = new UserPreferenceDTO()
-                .id(preference.getId());
-
-        UserPreferenceDTO result = MapperUtils.overlapPreferences(preference, applicationPreferences);
-
+        UserPreferenceDTO result = MapperUtils.overlapPreferences(userPreferences, userApplicationPreferences,
+                user.getId(), application.getId());
         assertEquals(expected, result);
     }
 
@@ -80,23 +81,23 @@ public class MapperUtilsTest {
      */
     @Test
     public void overlapPreferences_nonOverlapping() {
-        LanguageEntity language = new LanguageEntity();
-        language.setId(UUID.randomUUID());
-        language.setLanguageName("Greek");
-        language.setLanguageStandardId("el");
+        UserEntity user = new UserEntity();
+        user.setId(UUID.randomUUID());
 
-        UserPreferenceEntity preference = new UserPreferenceEntity();
-        preference.setId(UUID.randomUUID());
+        ApplicationEntity application = new ApplicationEntity();
+        application.setId(UUID.randomUUID());
 
-        UserPreferenceEntity applicationPreferences = new UserPreferenceEntity();
-        applicationPreferences.setId(UUID.randomUUID());
+        List<UserPreferenceEntity> userPreferences = createUserPreferences(user);
+        List<UserPreferenceEntity> userApplicationPreferences = Collections.emptyList();
 
-        // Ignore all null properties, default to those in the user preferences
-        UserPreferenceDTO expected = new UserPreferenceDTO()
-                .id(preference.getId());
+        UserPreferenceDTO expected = new UserPreferenceDTO();
+        expected.userId(user.getId());
+        expected.applicationId(application.getId());
+        expected.putAll(userPreferences.stream()
+                .collect(Collectors.toMap(a -> a.getType().getName(), a -> a.getOption().getValue())));
 
-        UserPreferenceDTO result = MapperUtils.overlapPreferences(preference, applicationPreferences);
-
+        UserPreferenceDTO result = MapperUtils.overlapPreferences(userPreferences, userApplicationPreferences,
+                user.getId(), application.getId());
         assertEquals(expected, result);
     }
 
@@ -138,5 +139,114 @@ public class MapperUtilsTest {
         assertEquals(userCustomFieldModel.getValue(), "TEST1");
         assertEquals(userCustomFieldModel.getOptions().get(0).getOptionValue(),
                 userCustomFieldEntity.getCustomField().getOptions().get(0).getOptionValue());
+    }
+
+    /**
+     * Helper method for creating a list of user preferences.
+     * @param user User.
+     * @return User preferences.
+     */
+    private List<UserPreferenceEntity> createUserPreferences(UserEntity user) {
+        UserPreferenceTypeEntity languagePreferenceType = new UserPreferenceTypeEntity();
+        languagePreferenceType.setId(UUID.fromString("e8dc1b46-65a1-4e1f-9516-009560a50a2f"));
+        languagePreferenceType.setName("language");
+
+        UserPreferenceTypeEntity communicationPreferenceType = new UserPreferenceTypeEntity();
+        communicationPreferenceType.setId(UUID.fromString("3505d910-a479-423b-b3f8-a3d16798a651"));
+        communicationPreferenceType.setName("communication");
+
+        UserPreferenceOptionEntity emailOption = new UserPreferenceOptionEntity();
+        emailOption.setId(UUID.fromString("0e3929a9-fabc-4d73-8cfe-14c89c51b531"));
+        emailOption.setUserPreferenceType(communicationPreferenceType);
+        emailOption.setValue("email");
+
+        UserPreferenceOptionEntity phoneOption = new UserPreferenceOptionEntity();
+        phoneOption.setId(UUID.fromString("3505d910-a479-423b-b3f8-a3d16798a651"));
+        phoneOption.setUserPreferenceType(communicationPreferenceType);
+        phoneOption.setValue("phone");
+
+        UserPreferenceOptionEntity englishOption = new UserPreferenceOptionEntity();
+        englishOption.setId(UUID.fromString("c95afee7-2bc4-4c12-acdd-344b5432520e"));
+        englishOption.setUserPreferenceType(languagePreferenceType);
+        englishOption.setValue("en");
+
+        UserPreferenceOptionEntity spanishOption = new UserPreferenceOptionEntity();
+        spanishOption.setId(UUID.fromString("b4449fdb-2f08-4c56-9c43-f0da407787d8"));
+        spanishOption.setUserPreferenceType(languagePreferenceType);
+        spanishOption.setValue("es");
+
+        UserPreferenceEntity languagePreference = new UserPreferenceEntity();
+        languagePreference.setId(UUID.randomUUID());
+        languagePreference.setUser(user);
+        languagePreference.setType(languagePreferenceType);
+        languagePreference.setOption(englishOption);
+
+        UserPreferenceEntity communicationPreference = new UserPreferenceEntity();
+        communicationPreference.setId(UUID.randomUUID());
+        communicationPreference.setUser(user);
+        communicationPreference.setType(communicationPreferenceType);
+        communicationPreference.setOption(phoneOption);
+
+        communicationPreferenceType.setUserPreferenceOptionEntities(List.of(emailOption, phoneOption));
+        languagePreferenceType.setUserPreferenceOptionEntities(List.of(englishOption, spanishOption));
+
+        return List.of(languagePreference, communicationPreference);
+    }
+
+    /**
+     * Helper method for creating a list of user application preferences.
+     * @param user User.
+     * @param application Application.
+     * @return User preferences.
+     */
+    private List<UserPreferenceEntity> createUserApplicationPreferences(UserEntity user,
+                                                                        ApplicationEntity application) {
+        UserPreferenceTypeEntity languagePreferenceType = new UserPreferenceTypeEntity();
+        languagePreferenceType.setId(UUID.fromString("e8dc1b46-65a1-4e1f-9516-009560a50a2f"));
+        languagePreferenceType.setName("language");
+
+        UserPreferenceTypeEntity communicationPreferenceType = new UserPreferenceTypeEntity();
+        communicationPreferenceType.setId(UUID.fromString("3505d910-a479-423b-b3f8-a3d16798a651"));
+        communicationPreferenceType.setName("communication");
+
+        UserPreferenceOptionEntity emailOption = new UserPreferenceOptionEntity();
+        emailOption.setId(UUID.fromString("0e3929a9-fabc-4d73-8cfe-14c89c51b531"));
+        emailOption.setUserPreferenceType(communicationPreferenceType);
+        emailOption.setValue("email");
+
+        UserPreferenceOptionEntity phoneOption = new UserPreferenceOptionEntity();
+        phoneOption.setId(UUID.fromString("3505d910-a479-423b-b3f8-a3d16798a651"));
+        phoneOption.setUserPreferenceType(communicationPreferenceType);
+        phoneOption.setValue("phone");
+
+        UserPreferenceOptionEntity englishOption = new UserPreferenceOptionEntity();
+        englishOption.setId(UUID.fromString("c95afee7-2bc4-4c12-acdd-344b5432520e"));
+        englishOption.setUserPreferenceType(languagePreferenceType);
+        englishOption.setValue("en");
+
+        UserPreferenceOptionEntity spanishOption = new UserPreferenceOptionEntity();
+        spanishOption.setId(UUID.fromString("b4449fdb-2f08-4c56-9c43-f0da407787d8"));
+        spanishOption.setUserPreferenceType(languagePreferenceType);
+        spanishOption.setValue("es");
+
+        UserPreferenceEntity languagePreference = new UserPreferenceEntity();
+        languagePreference.setId(UUID.randomUUID());
+        languagePreference.setUser(user);
+        languagePreference.setType(languagePreferenceType);
+        languagePreference.setOption(spanishOption);
+
+        UserPreferenceEntity communicationPreference = new UserPreferenceEntity();
+        communicationPreference.setId(UUID.randomUUID());
+        communicationPreference.setUser(user);
+        communicationPreference.setType(communicationPreferenceType);
+        communicationPreference.setOption(emailOption);
+
+        languagePreference.setApplication(application);
+        communicationPreference.setApplication(application);
+
+        communicationPreferenceType.setUserPreferenceOptionEntities(List.of(emailOption, phoneOption));
+        languagePreferenceType.setUserPreferenceOptionEntities(List.of(englishOption, spanishOption));
+
+        return List.of(languagePreference, communicationPreference);
     }
 }

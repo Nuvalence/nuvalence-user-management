@@ -1,9 +1,7 @@
 package io.nuvalence.user.management.api.service.controller;
 
 import io.nuvalence.user.management.api.service.generated.controllers.RoleApiDelegate;
-import io.nuvalence.user.management.api.service.generated.models.RoleCreationRequest;
 import io.nuvalence.user.management.api.service.generated.models.RoleDTO;
-import io.nuvalence.user.management.api.service.generated.models.RoleUpdateRequest;
 import io.nuvalence.user.management.api.service.generated.models.UserDTO;
 import io.nuvalence.user.management.api.service.service.RoleService;
 import lombok.RequiredArgsConstructor;
@@ -30,13 +28,13 @@ public class RoleApiDelegateImpl implements RoleApiDelegate {
     }
 
     @Override
-    public ResponseEntity<Void> addRole(RoleCreationRequest body) {
+    public ResponseEntity<Void> addRole(RoleDTO body) {
         return roleService.addRole(body);
     }
 
     @Override
-    public ResponseEntity<Void> updateRole(UUID id, RoleUpdateRequest role) {
-        return roleService.updateRole(id, role);
+    public ResponseEntity<Void> updateRole(UUID id, RoleDTO role, String resource) {
+        return roleService.updateRole(id, role, resource);
     }
 
     @Override
