@@ -367,13 +367,13 @@ paths:
       parameters:
         - name: body
           in: body
-          description: " role object"
+          description: "Role creation request object"
           required: true
           schema:
-            $ref: "#/definitions/RoleDTO"
+            $ref: "#/definitions/RoleCreationRequest"
       responses:
         "201":
-          description: "successful operation"
+          description: "Successful operation"
         "400":
           description: "Invalid request body"
         "401":
@@ -388,12 +388,12 @@ paths:
       parameters:
         - name: "resource"
           in: "query"
-          description: "Name of the resource "
+          description: "Name of the resource"
           required: false
           type: "string"
       responses:
         "200":
-          description: "successful operation"
+          description: "Successful operation"
           schema:
             $ref: "#/definitions/AllRoles"
         "401":
@@ -408,18 +408,18 @@ paths:
       parameters:
         - name: "id"
           in: "path"
-          description: "Id of role to delete "
+          description: "Id of role to delete"
           required: true
           type: "string"
           format: uuid
         - name: "resource"
           in: "query"
-          description: "Name of the resource "
+          description: "Name of the resource"
           required: false
           type: "string"
       responses:
         "200":
-          description: "successful operation"
+          description: "Successful operation"
         "401":
           description: "You are unauthorized to make this request"
         "404":
@@ -432,18 +432,18 @@ paths:
       parameters:
         - name: "id"
           in: "path"
-          description: "Id of role to retrieve users for "
+          description: "Id of role to retrieve users for"
           required: true
           type: "string"
           format: uuid
         - name: "resource"
           in: "query"
-          description: "Name of the resource "
+          description: "Name of the resource"
           required: false
           type: "string"
       responses:
         "200":
-          description: "successful operation"
+          description: "Successful operation"
           schema:
             $ref: '#/definitions/AllUsers'
         "401":
@@ -462,20 +462,15 @@ paths:
           required: true
           type: "string"
           format: uuid
-        - name: "resource"
-          in: "query"
-          description: "Name of the resource "
-          required: false
-          type: "string"
         - name: body
           in: body
-          description: "role object"
+          description: "Role update request object"
           required: true
           schema:
-            $ref: "#/definitions/RoleDTO"
+            $ref: "#/definitions/RoleUpdateRequest"
       responses:
         "201":
-          description: "successful operation"
+          description: "Successful operation"
         "401":
           description: "You are unauthorized to make this request"
         "404":
@@ -901,6 +896,45 @@ definitions:
         type: array
         items:
           type: string
+  RoleApplicationDTO:
+    type: object
+    required:
+      - applicationId
+      - permissions
+    properties:
+      applicationId:
+        type: string
+        format: uuid
+      permissions:
+        type: array
+        items:
+          type: string
+  RoleCreationRequest:
+    type: object
+    required:
+      - roleName
+      - displayName
+      - applications
+    properties:
+      roleName:
+        type: string
+      displayName:
+        type: string
+      applications:
+        type: array
+        items:
+          $ref: '#/definitions/RoleApplicationDTO'
+  RoleUpdateRequest:
+    type: object
+    properties:
+      roleName:
+        type: string
+      displayName:
+        type: string
+      applications:
+        type: array
+        items:
+          $ref: '#/definitions/RoleApplicationDTO'
   UserRoleDTO:
     type: object
     required:
