@@ -230,7 +230,9 @@ public class CerbosClient implements Permissionable {
         ResponseEntity<GetPolicyResponse> getPolicyResponse =
                 getJson("/admin/policy?id=resource." + resourceName + ".vdefault",
                         GetPolicyResponse.class, true);
-        if (getPolicyResponse.getStatusCode().is2xxSuccessful()) {
+        if (getPolicyResponse.getStatusCode().is2xxSuccessful()
+            && getPolicyResponse.getBody() != null
+            && getPolicyResponse.getBody().getPolicies() != null) {
             return Arrays.stream(Objects.requireNonNull(getPolicyResponse.getBody()).getPolicies())
                     .filter(p -> resourceName.equalsIgnoreCase(p.getResourcePolicy().getResource()))
                     .findFirst();
