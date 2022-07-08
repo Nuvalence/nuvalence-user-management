@@ -1,6 +1,7 @@
 package io.nuvalence.user.management.api.service.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.nuvalence.user.management.api.service.generated.models.RoleCreationRequest;
 import io.nuvalence.user.management.api.service.generated.models.RoleDTO;
 import io.nuvalence.user.management.api.service.generated.models.UserDTO;
 import io.nuvalence.user.management.api.service.service.RoleService;
@@ -43,11 +44,11 @@ public class RoleApiDelegateImplTest {
     @Test
     @WithMockUser
     public void addRole() throws Exception {
-        RoleDTO role = createMockRoleDto();
+        RoleCreationRequest roleCreationRequest = new RoleCreationRequest();
 
         ResponseEntity<Void> res = ResponseEntity.status(200).build();
-        when(roleService.addRole(role)).thenReturn(res);
-        final String postBody = new ObjectMapper().writeValueAsString(role);
+        when(roleService.addRole(roleCreationRequest)).thenReturn(res);
+        final String postBody = new ObjectMapper().writeValueAsString(roleCreationRequest);
 
         mockMvc.perform(
                 post("/api/v2/role")
@@ -65,11 +66,11 @@ public class RoleApiDelegateImplTest {
         when(roleService.getAllRolesByResource(ArgumentMatchers.anyString())).thenReturn(res);
 
         mockMvc.perform(
-                get("/api/v2/role?resource=default_resource")
-                        .contentType(MediaType.APPLICATION_JSON))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$[0].roleName").value(roles.get(0).getRoleName()))
-                        .andExpect(jsonPath("$[0].displayName").value(roles.get(0).getDisplayName()));
+                        get("/api/v2/role?resource=default_resource")
+                                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].roleName").value(roles.get(0).getRoleName()))
+                .andExpect(jsonPath("$[0].displayName").value(roles.get(0).getDisplayName()));
     }
 
     @Test
