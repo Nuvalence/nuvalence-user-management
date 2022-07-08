@@ -1,25 +1,29 @@
 package io.nuvalence.user.management.api.service.service;
 
+import io.nuvalence.user.management.api.service.config.exception.BusinessLogicException;
 import io.nuvalence.user.management.api.service.config.exception.ResourceNotFoundException;
 import io.nuvalence.user.management.api.service.entity.ApplicationEntity;
-import io.nuvalence.user.management.api.service.entity.ApplicationPreferenceEntity;
 import io.nuvalence.user.management.api.service.entity.UserEntity;
 import io.nuvalence.user.management.api.service.entity.UserPreferenceEntity;
-import io.nuvalence.user.management.api.service.generated.models.ApplicationPreferenceDTO;
+import io.nuvalence.user.management.api.service.entity.UserPreferenceOptionEntity;
+import io.nuvalence.user.management.api.service.entity.UserPreferenceTypeEntity;
 import io.nuvalence.user.management.api.service.generated.models.UserPreferenceDTO;
 import io.nuvalence.user.management.api.service.mapper.MapperUtils;
-import io.nuvalence.user.management.api.service.mapper.UserPreferenceEntityMapper;
-import io.nuvalence.user.management.api.service.repository.ApplicationPreferencesRepository;
 import io.nuvalence.user.management.api.service.repository.ApplicationRepository;
+import io.nuvalence.user.management.api.service.repository.UserPreferenceTypeRepository;
 import io.nuvalence.user.management.api.service.repository.UserPreferencesRepository;
 import io.nuvalence.user.management.api.service.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import javax.transaction.Transactional;
+import java.util.stream.Collectors;
 
 /**
  * Service for User Preferences.
@@ -32,56 +36,30 @@ public class UserPreferenceService {
 
     private final UserRepository userRepository;
     private final UserPreferencesRepository userPreferencesRepository;
-    private final ApplicationPreferencesRepository applicationPreferencesRepository;
+    private final UserPreferenceTypeRepository userPreferenceTypeRepository;
     private final ApplicationRepository applicationRepository;
 
-
     /**
-     * Returns a user's supported preferences based on their ID and application ID. A user's general
-     * preferences may not be supported by a given application; getting the supported preferences will
-     * override the conflicting preferences with application-specific preferences.
-     *
-     * @param userId User's ID.
-     * @param appId  Application ID.
-     * @return User Preferences.
-     */
-    public UserPreferenceEntity getSupportedPreferencesByUserId(UUID userId, UUID appId) {
-        UserPreferenceEntity preferences = this.getPreferencesByUserId(userId);
-
-        Optional<ApplicationEntity> application = applicationRepository.getApplicationById(appId);
-
-        if (application.isEmpty()) {
-            throw new ResourceNotFoundException("Application not found with given ID!");
-        }
-
-        Optional<ApplicationPreferenceEntity> applicationPreferences = applicationPreferencesRepository
-                .findApplicationPreferenceByApplicationId(userId, appId);
-
-        // if there are no application-specific preferences, just send over the general preferences.
-        if (applicationPreferences.isEmpty()) {
-            return preferences;
-        }
-
-        // combine the two together; results in one user preferences entity where each field is supported
-        return MapperUtils.overlapPreferenceEntities(preferences, applicationPreferences.get());
-    }
-
-    /**
-     * Returns a user's general preferences based on their ID. General preferences are those that
-     * may or may not be supported by the requesting application.
-     *
+     * Returns user preferences, optionally by application.
+     * 
      * @param userId user's id.
+     * @param appId app id.
      * @return User Preferences.
      */
-    public UserPreferenceEntity getPreferencesByUserId(UUID userId) {
-        Optional<UserPreferenceEntity> preferences = userPreferencesRepository.findPreferencesByUserId(userId);
-        log.info("called repo");
+    public UserPreferenceDTO getUserPreferences(UUID userId, UUID appId) {
+        List<UserPreferenceEntity> userPreferences =
+                userPreferencesRepository.findPreferencesByUserId(userId);
+        List<UserPreferenceEntity> applicationPreferences = new ArrayList<>();
 
-        if (preferences.isEmpty()) {
+        if (userId != null && appId != null) {
+            applicationPreferences = userPreferencesRepository.findUserApplicationPreferences(userId, appId);
+        }
+
+        if (userPreferences.isEmpty() && applicationPreferences.isEmpty()) {
             throw new ResourceNotFoundException("Preferences not found for given user!");
         }
 
-        return preferences.get();
+        return MapperUtils.overlapPreferences(userPreferences, applicationPreferences, userId, appId);
     }
 
     /**
@@ -89,60 +67,102 @@ public class UserPreferenceService {
      * @param userId User ID.
      * @param updatedPreferences Updated preferences.
      */
-    public void updatePreferencesByUserId(UUID userId, UserPreferenceDTO updatedPreferences) {
+    public void updateUserPreferences(UUID userId, Map<String, String> updatedPreferences) {
         Optional<UserEntity> user = userRepository.findById(userId);
 
         if (user.isEmpty()) {
             throw new ResourceNotFoundException("Cannot find user with given ID!");
         }
 
-        Optional<UserPreferenceEntity> initialPreferences = userPreferencesRepository
+        List<UserPreferenceEntity> initialPreferences = userPreferencesRepository
                 .findPreferencesByUserId(user.get().getId());
 
-        UserPreferenceEntity preferences = UserPreferenceEntityMapper
-                .INSTANCE
-                .userPreferencesDtoToEntity(updatedPreferences);
-
-        // if there are already preferences, keep the ID. Otherwise, generate a new one.
-        preferences.setId(initialPreferences.isEmpty() ? UUID.randomUUID() : initialPreferences.get().getId());
-
-        // associate the updated preferences with the user
-        preferences.setUserId(user.get().getId());
-
-        userPreferencesRepository.save(preferences);
+        persistPreferences(updatedPreferences, initialPreferences, user.get(), null);
     }
 
     /**
-     * Replaces the user preferences for a specific application.
+     * For a given user and application, override their user preferences.
      * @param userId User ID.
      * @param appId Application ID.
-     * @param updatedPreferences Updated application preferences.
+     * @param updatedPreferences Updated preferences.
      */
-    public void updateApplicationPreferencesById(UUID userId, UUID appId,
-                                                                 ApplicationPreferenceDTO updatedPreferences) {
+    public void updateUserApplicationPreferences(UUID userId, UUID appId, Map<String, String> updatedPreferences) {
         Optional<UserEntity> user = userRepository.findById(userId);
-        Optional<ApplicationEntity> application = applicationRepository.getApplicationById(appId);
-
-        if (user.isEmpty() || application.isEmpty()) {
-            throw new ResourceNotFoundException("Cannot find user or application with given ID!");
+        if (user.isEmpty()) {
+            throw new ResourceNotFoundException("Cannot find user with given ID!");
         }
 
-        ApplicationPreferenceEntity preferences = UserPreferenceEntityMapper
-                .INSTANCE.applicationPreferencesDtoToEntity(updatedPreferences);
-
-        Optional<UserPreferenceEntity> userPreference = userPreferencesRepository.findPreferencesByUserId(userId);
-
-        if (userPreference.isEmpty()) {
-            throw new ResourceNotFoundException(
-                    "Cannot assign application preferences for user with no default user preferences."
-            );
+        Optional<ApplicationEntity> application = applicationRepository.findById(appId);
+        if (application.isEmpty()) {
+            throw new ResourceNotFoundException("Cannot find application with given ID!");
         }
 
-        preferences.setUser(user.get());
-        preferences.setUserPreferenceId(userPreference.get());
-        preferences.setApplication(application.get());
+        List<UserPreferenceEntity> initialPreferences = userPreferencesRepository
+                .findUserApplicationPreferences(user.get().getId(), application.get().getId());
 
-        applicationPreferencesRepository.save(preferences);
+        persistPreferences(updatedPreferences, initialPreferences, user.get(), application.get());
     }
 
+    private void persistPreferences(Map<String, String> updatedPreferences,
+                                    List<UserPreferenceEntity> initialPreferences,
+                                    UserEntity user, ApplicationEntity application) {
+        List<UserPreferenceEntity> persistedPreferences = new ArrayList<>();
+
+        if (updatedPreferences == null || updatedPreferences.isEmpty()) {
+            throw new BusinessLogicException("You must pass in at least one preference to update.");
+        }
+
+        // get all preference types by their names
+        Map<String, UserPreferenceTypeEntity> foundPreferenceTypes = userPreferenceTypeRepository
+                .findAllByNames(new ArrayList<>(updatedPreferences.keySet()))
+                .stream().collect(Collectors.toMap(t -> t.getName().toLowerCase(), t -> t));
+
+        for (Map.Entry<String, String> entry : updatedPreferences.entrySet()) {
+            if (!foundPreferenceTypes.containsKey(entry.getKey().toLowerCase())) {
+                throw new ResourceNotFoundException(
+                        String.format("Preference with name '%s' is not valid.", entry.getKey())
+                );
+            }
+
+            UserPreferenceTypeEntity preferenceType = foundPreferenceTypes.get(entry.getKey().toLowerCase());
+
+            Optional<UserPreferenceEntity> existingUserPreference = initialPreferences.stream().filter(p ->
+                    p.getType().getId().compareTo(preferenceType.getId()) == 0).findFirst();
+
+            Optional<UserPreferenceOptionEntity> foundOption = Optional.empty();
+            List<UserPreferenceOptionEntity> options = preferenceType.getUserPreferenceOptionEntities();
+            if (options != null && !options.isEmpty()) {
+                foundOption = options.stream()
+                        .filter(o -> o.getValue().equalsIgnoreCase(entry.getValue())).findFirst();
+            }
+
+            // the value passed in was a valid option for the preference type, so allow it to go through
+            if (foundOption.isPresent()) {
+                // an existing preference for the user has already been set, so update the value for it
+                if (existingUserPreference.isPresent()) {
+                    // only update if the value is actually different
+                    if (foundOption.get().getId().compareTo(
+                            existingUserPreference.get().getOption().getId()) != 0) {
+                        existingUserPreference.get().setOption(foundOption.get());
+                        persistedPreferences.add(existingUserPreference.get());
+                    }
+                } else {
+                    UserPreferenceEntity newUserPreference = new UserPreferenceEntity();
+                    newUserPreference.setUser(user);
+                    newUserPreference.setApplication(application);
+                    newUserPreference.setType(preferenceType);
+                    newUserPreference.setOption(foundOption.get());
+                    persistedPreferences.add(newUserPreference);
+                }
+            } else {
+                throw new ResourceNotFoundException(
+                        String.format("No valid option value found for type %s and value %s.",
+                                preferenceType.getName(),
+                                entry.getValue())
+                );
+            }
+        }
+
+        userPreferencesRepository.saveAll(persistedPreferences);
+    }
 }

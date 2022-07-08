@@ -2,13 +2,8 @@ package io.nuvalence.user.management.api.service.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.nuvalence.user.management.api.service.entity.ApplicationEntity;
-import io.nuvalence.user.management.api.service.entity.LanguageEntity;
 import io.nuvalence.user.management.api.service.entity.UserEntity;
-import io.nuvalence.user.management.api.service.entity.UserPreferenceEntity;
-import io.nuvalence.user.management.api.service.generated.models.ApplicationPreferenceDTO;
-import io.nuvalence.user.management.api.service.generated.models.LanguageDTO;
 import io.nuvalence.user.management.api.service.generated.models.UserPreferenceDTO;
-import io.nuvalence.user.management.api.service.mapper.UserPreferenceEntityMapper;
 import io.nuvalence.user.management.api.service.service.UserPreferenceService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,7 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @WithMockUser
-public class UserPreferencesApiDelegateImplTest {
+public class UserPreferenceApiDelegateImplTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -49,36 +44,30 @@ public class UserPreferencesApiDelegateImplTest {
     private UserPreferenceService userPreferenceService;
 
     @Test
-    public void getPreferencesFromUser() throws Exception {
+    public void getUserPreferences() throws Exception {
         UserEntity user = createMockUser();
-        UserPreferenceEntity preferences = createMockUserPreferences();
-        LanguageEntity language = preferences.getLanguage();
+        UserPreferenceDTO preferences = createUserPreferenceDto(user.getId(), null);
 
-        when(userPreferenceService.getPreferencesByUserId(user.getId())).thenReturn(preferences);
+        when(userPreferenceService.getUserPreferences(user.getId(), null)).thenReturn(preferences);
 
         mockMvc.perform(get("/api/v2/user/" + user.getId().toString() + "/preferences")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("communicationPreference").value("sms"))
-                .andExpect(jsonPath("language.id").value(language.getId().toString()))
-                .andExpect(jsonPath("language.languageName").value(language.getLanguageName()))
-                .andExpect(jsonPath("language.languageStandardId").value(language.getLanguageStandardId()));
+                .andExpect(jsonPath("communication").value("phone"))
+                .andExpect(jsonPath("language").value("el"));
     }
 
     @Test
-    public void getSupportedPreferencesFromUser() throws Exception {
-        UserPreferenceEntity preferences = createMockUserPreferences();
-
-        LanguageEntity backupLanguage = createMockLanguage("Greek", "el");
-
+    public void getUserApplicationPreferences() throws Exception {
         ApplicationEntity application = new ApplicationEntity();
         application.setId(UUID.randomUUID());
         application.setName("my-awesome-application");
 
-        preferences.setLanguage(backupLanguage);
-
         UserEntity user = createMockUser();
-        when(userPreferenceService.getSupportedPreferencesByUserId(user.getId(), application.getId()))
+
+        UserPreferenceDTO preferences = createUserPreferenceDto(user.getId(), application.getId());
+
+        when(userPreferenceService.getUserPreferences(user.getId(), application.getId()))
                 .thenReturn(preferences);
 
         mockMvc.perform(
@@ -86,23 +75,15 @@ public class UserPreferencesApiDelegateImplTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("communicationPreference").value("sms"))
-                .andExpect(jsonPath("language.id").value(backupLanguage.getId().toString()))
-                .andExpect(jsonPath("language.languageName").value(backupLanguage.getLanguageName()))
-                .andExpect(jsonPath("language.languageStandardId")
-                        .value(backupLanguage.getLanguageStandardId()));
+                .andExpect(jsonPath("communication").value("phone"))
+                .andExpect(jsonPath("language").value("el"));
     }
 
     @Test
     public void updateUserPreferences() throws Exception {
         UserEntity user = createMockUser();
-        UserPreferenceEntity preferences = createMockUserPreferences();
-
-        UserPreferenceDTO preferencesDto =
-                UserPreferenceEntityMapper.INSTANCE.userPreferencesEntityToDto(preferences);
-
-        doNothing().when(userPreferenceService).updatePreferencesByUserId(user.getId(), preferencesDto);
-
+        UserPreferenceDTO preferences = createUserPreferenceDto(user.getId(), null);
+        doNothing().when(userPreferenceService).updateUserPreferences(user.getId(), preferences);
         final String preferencesBody = new ObjectMapper().writeValueAsString(preferences);
 
         mockMvc.perform(
@@ -115,21 +96,13 @@ public class UserPreferencesApiDelegateImplTest {
     @Test
     public void updateApplicationPreferences() throws Exception {
         UserEntity user = createMockUser();
-
         ApplicationEntity application = new ApplicationEntity();
         application.setId(UUID.randomUUID());
         application.setName("my-awesome-application");
-
-        ApplicationPreferenceDTO applicationPreferences = new ApplicationPreferenceDTO()
-                .language(new LanguageDTO()
-                        .id(UUID.randomUUID())
-                        .languageName("Greek")
-                        .languageStandardId("el"));
-
+        UserPreferenceDTO preferences = createUserPreferenceDto(user.getId(), application.getId());
         doNothing().when(userPreferenceService)
-                .updateApplicationPreferencesById(user.getId(), application.getId(), applicationPreferences);
-
-        final String preferencesBody = new ObjectMapper().writeValueAsString(applicationPreferences);
+                .updateUserApplicationPreferences(user.getId(), application.getId(), preferences);
+        final String preferencesBody = new ObjectMapper().writeValueAsString(preferences);
 
         mockMvc.perform(
                 put("/api/v2/user/" + user.getId().toString() + "/preferences")
@@ -146,22 +119,12 @@ public class UserPreferencesApiDelegateImplTest {
         return user;
     }
 
-    private UserPreferenceEntity createMockUserPreferences() {
-        LanguageEntity language = createMockLanguage("English", "en");
-
-        UserPreferenceEntity preference = new UserPreferenceEntity();
-        preference.setId(UUID.randomUUID());
-        preference.setCommunicationPreference("sms");
-        preference.setLanguage(language);
-
-        return preference;
-    }
-
-    private LanguageEntity createMockLanguage(String name, String standardId) {
-        LanguageEntity language = new LanguageEntity();
-        language.setId(UUID.randomUUID());
-        language.setLanguageName(name);
-        language.setLanguageStandardId(standardId);
-        return language;
+    private UserPreferenceDTO createUserPreferenceDto(UUID userId, UUID applicationId) {
+        UserPreferenceDTO preferences = new UserPreferenceDTO();
+        preferences.setUserId(userId);
+        preferences.setApplicationId(applicationId);
+        preferences.put("communication", "phone");
+        preferences.put("language", "el");
+        return preferences;
     }
 }

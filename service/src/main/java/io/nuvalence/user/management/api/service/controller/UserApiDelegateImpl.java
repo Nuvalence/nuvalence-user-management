@@ -1,14 +1,11 @@
 package io.nuvalence.user.management.api.service.controller;
 
-import io.nuvalence.user.management.api.service.entity.UserPreferenceEntity;
 import io.nuvalence.user.management.api.service.generated.controllers.UserApiDelegate;
-import io.nuvalence.user.management.api.service.generated.models.ApplicationPreferenceDTO;
 import io.nuvalence.user.management.api.service.generated.models.CreateOrUpdateUserCustomFieldDTO;
 import io.nuvalence.user.management.api.service.generated.models.RoleDTO;
 import io.nuvalence.user.management.api.service.generated.models.UserDTO;
 import io.nuvalence.user.management.api.service.generated.models.UserPreferenceDTO;
 import io.nuvalence.user.management.api.service.generated.models.UserRoleDTO;
-import io.nuvalence.user.management.api.service.mapper.UserPreferenceEntityMapper;
 import io.nuvalence.user.management.api.service.service.UserPreferenceService;
 import io.nuvalence.user.management.api.service.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.NativeWebRequest;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -68,36 +66,29 @@ public class UserApiDelegateImpl implements UserApiDelegate {
     }
 
     @Override
-    public ResponseEntity<UserPreferenceDTO> getPreferencesById(UUID id) {
-        UserPreferenceEntity preferences = userPreferenceService.getPreferencesByUserId(id);
-
-        UserPreferenceDTO preferencesDto = UserPreferenceEntityMapper.INSTANCE
-                .userPreferencesEntityToDto(preferences);
-
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(preferencesDto);
+    public ResponseEntity<UserPreferenceDTO> getUserPreferences(UUID id) {
+        UserPreferenceDTO preferences = userPreferenceService.getUserPreferences(id, null);
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(preferences);
     }
 
     @Override
-    public ResponseEntity<UserPreferenceDTO> getSupportedPreferencesById(UUID id, UUID appId) {
-        UserPreferenceEntity preferences = userPreferenceService.getSupportedPreferencesByUserId(id, appId);
-
-        return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(UserPreferenceEntityMapper.INSTANCE.userPreferencesEntityToDto(preferences));
+    public ResponseEntity<UserPreferenceDTO> getUserApplicationPreferences(UUID id, UUID appId) {
+        UserPreferenceDTO preferences = userPreferenceService.getUserPreferences(id, appId);
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(preferences);
     }
 
     @Override
     public ResponseEntity<Void> updatePreferences(UUID id,
-                                                  UserPreferenceDTO userPreferences) {
-        userPreferenceService.updatePreferencesByUserId(id, userPreferences);
+                                                  Map<String, String> userPreferences) {
+        userPreferenceService.updateUserPreferences(id, userPreferences);
         return ResponseEntity.ok().build();
     }
 
     @Override
     public ResponseEntity<Void> updateApplicationPreferences(UUID id,
                                                              UUID appId,
-                                                             ApplicationPreferenceDTO userPreferences) {
-        userPreferenceService.updateApplicationPreferencesById(id, appId, userPreferences);
+                                                             Map<String, String> userPreferences) {
+        userPreferenceService.updateUserApplicationPreferences(id, appId, userPreferences);
         return ResponseEntity.ok().build();
     }
 

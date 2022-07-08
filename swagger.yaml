@@ -165,7 +165,7 @@ paths:
       tags:
         - "user"
       summary: "Get preferences by user id"
-      operationId: "getPreferencesById"
+      operationId: "getUserPreferences"
       parameters:
         - name: "id"
           in: "path"
@@ -212,7 +212,7 @@ paths:
       tags:
         - "user"
       summary: "Get supported preferences for an application by user id"
-      operationId: "getSupportedPreferencesById"
+      operationId: "getUserApplicationPreferences"
       parameters:
         - name: "id"
           in: "path"
@@ -253,12 +253,12 @@ paths:
           required: true
           type: "string"
           format: uuid
-        - name: userPreferences
+        - name: userPreference
           in: body
-          description: "Application preferences object"
+          description: "User preferences object"
           required: true
           schema:
-            $ref: "#/definitions/ApplicationPreferenceDTO"
+            $ref: "#/definitions/UserPreferenceDTO"
       responses:
         "200":
           description: "Successful operation"
@@ -591,7 +591,7 @@ paths:
           description: "Successful operation"
           schema:
             type: array
-            example: [ { id: "1234", languageName: "English", languageStandardId: "en" } ]
+            example: [ { id: "1234", name: "English", languageStandardId: "en", localName: "English" } ]
             items:
               $ref: "#/definitions/LanguageDTO"
 
@@ -822,6 +822,20 @@ paths:
         "404":
           description: "Role not found"
 
+  /userPreferenceType:
+    get:
+      tags:
+        - "userPreferenceType"
+      summary: "Return all user preference types."
+      operationId: "getUserPreferenceTypes"
+      responses:
+        "200":
+          description: "Successful operation"
+          schema:
+            type: array
+            example: [ { id: "1234", name: "communication" } ]
+            items:
+              $ref: "#/definitions/UserPreferenceTypeDTO"
 definitions:
   CustomFieldDataType:
     type: string
@@ -949,17 +963,15 @@ definitions:
         format: uuid
   UserPreferenceDTO:
     type: object
-    required:
-      - language
-      - communicationPreference
     properties:
-      id:
+      userId:
         type: string
         format: uuid
-      language:
-        $ref: '#/definitions/LanguageDTO'
-      communicationPreference:
+      applicationId:
         type: string
+        format: uuid
+    additionalProperties:
+      type: string
   PermissionDTO:
     type: object
     required:
@@ -1008,14 +1020,6 @@ definitions:
         items:
           type: string
           format: uuid
-  ApplicationPreferenceDTO:
-    type: object
-    properties:
-      id:
-        type: string
-        format: uuid
-      language:
-        $ref: '#/definitions/LanguageDTO'
   UserCreationRequest:
     type: object
     required:
@@ -1066,6 +1070,34 @@ definitions:
       languageStandardId:
         type: string
         example: "en"
+      localName:
+        type: string
+        example: "English"
+  UserPreferenceTypeDTO:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+      name:
+        type: string
+        example: "language"
+      options:
+        type: array
+        items:
+          type: string
+  UserPreferenceOptionDTO:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+      value:
+        type: string
+        example: "text/sms"
+      userPreferenceTypeId:
+        type: string
+        format: uuid        
   CustomFieldOptionDTO:
     type: object
     properties:
@@ -1215,3 +1247,7 @@ definitions:
         format: uuid
       name:
         type: string
+  AllUserPreferenceTypes:
+    type: array
+    items:
+      $ref: '#/definitions/UserPreferenceTypeDTO'

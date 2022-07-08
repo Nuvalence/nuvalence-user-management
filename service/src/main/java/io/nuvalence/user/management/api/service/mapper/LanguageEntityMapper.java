@@ -23,6 +23,5 @@ public interface LanguageEntityMapper {
     LanguageDTO languageEntityToLanguageDto(LanguageEntity language);
 
     @Mapping(target = "applicationLanguages", ignore = true)
-    @Mapping(target = "userPreferenceEntity", ignore = true)
     LanguageEntity languageDtoToLanguageEntity(LanguageDTO languageDto);
 }

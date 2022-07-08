@@ -9,6 +9,7 @@ import org.hibernate.annotations.Type;
 
 import java.util.List;
 import java.util.UUID;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -17,15 +18,15 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 /**
- * Represents a single application.
+ * Represents preference types.
  */
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "application")
-public class ApplicationEntity {
+@Table(name = "user_preference_type")
+public class UserPreferenceTypeEntity {
     @Id
     @GeneratedValue(generator = "uuid2")
     @GenericGenerator(name = "uuid2", strategy = "org.hibernate.id.UUIDGenerator")
@@ -33,15 +34,10 @@ public class ApplicationEntity {
     @Column(name = "id", length = 36, insertable = false, updatable = false, nullable = false)
     private UUID id;
 
-    @Column(name = "display_name", nullable = false, unique = true)
-    private String displayName;
-
-    @OneToMany(mappedBy = "application")
-    private List<ApplicationLanguageEntity> supportedLanguages;
-
     @Column(name = "name", nullable = false, unique = true)
     private String name;
 
-    @OneToMany(mappedBy = "application")
-    private List<ApplicationPermissionEntity> permissions;
+    @OneToMany(mappedBy = "userPreferenceType")
+    private List<UserPreferenceOptionEntity> userPreferenceOptionEntities;
+
 }

@@ -33,18 +33,18 @@ public class LanguageEntity {
     @Column(name = "id", length = 36, insertable = false, updatable = false, nullable = false)
     private UUID id;
 
-    @Column(name = "lang_name", nullable = false, unique = true)
+    @Column(name = "name", nullable = false, unique = true)
     private String languageName;
 
     /**
      * ISO 639-1 identifier.
      */
-    @Column(name = "lang_standard_id", nullable = false, unique = true)
+    @Column(name = "language_standard_id", nullable = false, unique = true)
     private String languageStandardId;
+
+    @Column(name = "local_name", nullable = false)
+    private String localName;
 
     @OneToMany(mappedBy = "language")
     private List<ApplicationLanguageEntity> applicationLanguages;
-
-    @OneToMany(mappedBy = "language")
-    private List<UserPreferenceEntity> userPreferenceEntity;
 }
