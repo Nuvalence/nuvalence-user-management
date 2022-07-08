@@ -238,7 +238,7 @@ paths:
     put:
       tags:
         - "user"
-      summary: "Set preference for a given application."
+      summary: "Set preferences for a given application."
       operationId: "updateApplicationPreferences"
       parameters:
         - name: "id"
@@ -255,7 +255,7 @@ paths:
           format: uuid
         - name: userPreference
           in: body
-          description: "User preference object"
+          description: "User preferences object"
           required: true
           schema:
             $ref: "#/definitions/UserPreferenceDTO"
