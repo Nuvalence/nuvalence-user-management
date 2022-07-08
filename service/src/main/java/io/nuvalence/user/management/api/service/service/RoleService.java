@@ -68,11 +68,11 @@ public class RoleService {
 
         // Validate the applications and permissions
         Map<UUID, ApplicationEntity> applicationEntityMap =
-                validateApplicationsAndPermissions(roleCreationRequest.getApplications());
+            validateApplicationsAndPermissions(roleCreationRequest.getApplications());
 
         // Save each application's permissions
         saveApplicationPermissions(roleCreationRequest.getApplications(), applicationEntityMap,
-                roleCreationRequest.getRoleName());
+            roleCreationRequest.getRoleName());
 
         roleRepository.save(newRole);
         return ResponseEntity.ok().build();
@@ -106,7 +106,7 @@ public class RoleService {
 
         // Validate the applications and permissions
         Map<UUID, ApplicationEntity> applicationEntityMap =
-                validateApplicationsAndPermissions(roleUpdateRequest.getApplications());
+            validateApplicationsAndPermissions(roleUpdateRequest.getApplications());
 
         // Save each application's permissions
         saveApplicationPermissions(roleUpdateRequest.getApplications(), applicationEntityMap, role.getRoleName());
@@ -191,7 +191,7 @@ public class RoleService {
     }
 
     private Map<UUID, ApplicationEntity> validateApplicationsAndPermissions(
-            List<RoleApplicationDTO> roleApplicationDTOs) {
+        List<RoleApplicationDTO> roleApplicationDTOs) {
         // Validate the applications and permissions
         if (roleApplicationDTOs != null) {
             // Check the validity of the applications
@@ -210,17 +210,17 @@ public class RoleService {
             // Check the list against the application repository
             List<ApplicationEntity> applications = applicationRepository.findAllById(appIds);
             List<UUID> foundApplications = applications.stream().map(ApplicationEntity::getId)
-                    .collect(Collectors.toList());
+                .collect(Collectors.toList());
             Optional<UUID> notFoundApplication = appIds.stream()
-                    .filter(a -> !foundApplications.contains(a))
-                    .findFirst();
+                .filter(a -> !foundApplications.contains(a))
+                .findFirst();
             if (notFoundApplication.isPresent()) {
                 throw new BusinessLogicException("The provided application id '"
-                        + notFoundApplication.get() + "' is invalid.");
+                    + notFoundApplication.get() + "' is invalid.");
             }
             Map<UUID, ApplicationEntity> applicationEntityMap = applications.stream().collect(Collectors.toMap(
-                    ApplicationEntity::getId,
-                    e -> e
+                ApplicationEntity::getId,
+                e -> e
             ));
 
             // Validate the permissions
@@ -232,17 +232,17 @@ public class RoleService {
                         Optional<PermissionEntity> perm = permissionRepository.findByPermissionName(permission);
                         if (perm.isEmpty()) {
                             throw new BusinessLogicException("The provided permission '" + permission
-                                    + "' is invalid.");
+                                + "' is invalid.");
                         }
 
                         boolean appPermExists = appPerms.stream()
-                                .anyMatch(appPerm -> perm.get().getId().equals(appPerm.getPermission().getId())
-                                        && applicationEntityMap.get(raDTO.getApplicationId()).getId()
-                                        .equals(appPerm.getApplication().getId()));
+                            .anyMatch(appPerm -> perm.get().getId().equals(appPerm.getPermission().getId())
+                                && applicationEntityMap.get(raDTO.getApplicationId()).getId()
+                                .equals(appPerm.getApplication().getId()));
                         if (!appPermExists) {
                             throw new BusinessLogicException("The provided permission '" + permission
-                                    + "' is invalid for the provided application '"
-                                    + applicationEntityMap.get(raDTO.getApplicationId()).getDisplayName() + "'.");
+                                + "' is invalid for the provided application '"
+                                + applicationEntityMap.get(raDTO.getApplicationId()).getDisplayName() + "'.");
                         }
                     }
                 }
@@ -260,9 +260,9 @@ public class RoleService {
 
             if (app != null) {
                 client.updateRolePermissionMappings(
-                        app.getName(),
-                        roleName,
-                        raDTO.getPermissions().toArray(String[]::new)
+                    app.getName(),
+                    roleName,
+                    raDTO.getPermissions().toArray(String[]::new)
                 );
             }
         }

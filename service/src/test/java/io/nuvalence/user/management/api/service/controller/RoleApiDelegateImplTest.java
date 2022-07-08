@@ -51,9 +51,9 @@ public class RoleApiDelegateImplTest {
         final String postBody = new ObjectMapper().writeValueAsString(roleCreationRequest);
 
         mockMvc.perform(
-                post("/api/v2/role")
-                        .content(postBody)
-                        .contentType(MediaType.APPLICATION_JSON)
+            post("/api/v2/role")
+                .content(postBody)
+                .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(status().isOk());
     }
 
@@ -66,11 +66,11 @@ public class RoleApiDelegateImplTest {
         when(roleService.getAllRolesByResource(ArgumentMatchers.anyString())).thenReturn(res);
 
         mockMvc.perform(
-                        get("/api/v2/role?resource=default_resource")
-                                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].roleName").value(roles.get(0).getRoleName()))
-                .andExpect(jsonPath("$[0].displayName").value(roles.get(0).getDisplayName()));
+                get("/api/v2/role?resource=default_resource")
+                        .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$[0].roleName").value(roles.get(0).getRoleName()))
+                        .andExpect(jsonPath("$[0].displayName").value(roles.get(0).getDisplayName()));
     }
 
     @Test

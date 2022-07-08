@@ -74,10 +74,10 @@ public class RoleServiceTest {
     public void addRole_addsRoleIfValid() {
         RoleCreationRequest roleCreationRequest = createRoleCreationRequest();
         when(client.updateRolePermissionMappings(
-                ArgumentMatchers.anyString(),
-                ArgumentMatchers.anyString(),
-                any()))
-                .thenReturn(true);
+            ArgumentMatchers.anyString(),
+            ArgumentMatchers.anyString(),
+            any()))
+            .thenReturn(true);
 
         RoleApplicationDTO roleApplicationDTO = createRoleApplicationDTO();
         roleCreationRequest.setApplications(List.of(roleApplicationDTO));
@@ -86,17 +86,17 @@ public class RoleServiceTest {
         List<UUID> appIds = List.of(roleApplicationDTO.getApplicationId());
         List<ApplicationEntity> applications = List.of(applicationEntity);
         when(applicationRepository.findAllById(appIds))
-                .thenReturn(applications);
+            .thenReturn(applications);
         PermissionEntity permissionEntity = createPermissionEntity();
         when(permissionRepository.findByPermissionName(roleApplicationDTO.getPermissions().get(0)))
-                .thenReturn(Optional.of(permissionEntity));
+            .thenReturn(Optional.of(permissionEntity));
         ApplicationPermissionEntity applicationPermissionEntity = createApplicationPermissionEntity(applicationEntity,
-                permissionEntity);
+            permissionEntity);
         List<ApplicationPermissionEntity> applicationPermissionEntities =
-                new ArrayList<>();
+            new ArrayList<>();
         applicationPermissionEntities.add(applicationPermissionEntity);
         when(applicationPermissionRepository.findAll())
-                .thenReturn(applicationPermissionEntities);
+            .thenReturn(applicationPermissionEntities);
 
         ResponseEntity<Void> res = roleService.addRole(roleCreationRequest);
         assertEquals(HttpStatus.OK, res.getStatusCode());
@@ -122,10 +122,10 @@ public class RoleServiceTest {
     public void updateRole_updatesRoleIfValid() {
         RoleEntity roleEntity = createRoleEntity();
         when(client.updateRolePermissionMappings(
-                ArgumentMatchers.anyString(),
-                ArgumentMatchers.anyString(),
-                any()))
-                .thenReturn(true);
+            ArgumentMatchers.anyString(),
+            ArgumentMatchers.anyString(),
+            any()))
+            .thenReturn(true);
         when(roleRepository.findById(roleEntity.getId())).thenReturn(Optional.of(createRoleEntity()));
 
         RoleApplicationDTO roleApplicationDTO = new RoleApplicationDTO();
@@ -139,16 +139,16 @@ public class RoleServiceTest {
         List<UUID> appIds = List.of(roleApplicationDTO.getApplicationId());
         List<ApplicationEntity> applications = List.of(applicationEntity);
         when(applicationRepository.findAllById(appIds))
-                .thenReturn(applications);
+            .thenReturn(applications);
         when(permissionRepository.findByPermissionName(roleApplicationDTO.getPermissions().get(0)))
-                .thenReturn(Optional.of(permissionEntity));
+            .thenReturn(Optional.of(permissionEntity));
         ApplicationPermissionEntity applicationPermissionEntity = createApplicationPermissionEntity(applicationEntity,
-                permissionEntity);
+            permissionEntity);
         List<ApplicationPermissionEntity> applicationPermissionEntities =
-                new ArrayList<>();
+            new ArrayList<>();
         applicationPermissionEntities.add(applicationPermissionEntity);
         when(applicationPermissionRepository.findAll())
-                .thenReturn(applicationPermissionEntities);
+            .thenReturn(applicationPermissionEntities);
 
         ResponseEntity<Void> response = roleService.updateRole(roleEntity.getId(), roleUpdateRequest);
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -162,7 +162,7 @@ public class RoleServiceTest {
         when(roleRepository.findById(roleEntity.getId())).thenReturn(Optional.empty());
 
         Exception exception = assertThrows(BusinessLogicException.class, () ->
-                roleService.updateRole(roleEntity.getId(), roleUpdateRequest));
+            roleService.updateRole(roleEntity.getId(), roleUpdateRequest));
         assertEquals("This role does not exist.", exception.getMessage());
     }
 
@@ -178,10 +178,10 @@ public class RoleServiceTest {
         roleUpdateRequest.setApplications(List.of(roleApplicationDTO));
 
         Exception exception = assertThrows(BusinessLogicException.class, () ->
-                roleService.updateRole(roleEntity.getId(), roleUpdateRequest));
+            roleService.updateRole(roleEntity.getId(), roleUpdateRequest));
         assertEquals(
-                "The provided application id 'ad00dbd6-f7dc-11ec-b939-0242ac120002' is invalid.",
-                exception.getMessage());
+            "The provided application id 'ad00dbd6-f7dc-11ec-b939-0242ac120002' is invalid.",
+            exception.getMessage());
     }
 
     @Test
@@ -200,9 +200,9 @@ public class RoleServiceTest {
         List<UUID> appIds = List.of(roleApplicationDTO.getApplicationId());
         List<ApplicationEntity> applications = List.of(applicationEntity);
         when(applicationRepository.findAllById(appIds))
-                .thenReturn(applications);
+            .thenReturn(applications);
         Exception exception = assertThrows(BusinessLogicException.class, () ->
-                roleService.updateRole(roleEntity.getId(), roleUpdateRequest));
+            roleService.updateRole(roleEntity.getId(), roleUpdateRequest));
         assertEquals("The provided permission 'Invalid_Role' is invalid.", exception.getMessage());
     }
 
