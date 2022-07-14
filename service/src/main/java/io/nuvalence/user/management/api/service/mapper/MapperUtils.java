@@ -2,7 +2,6 @@ package io.nuvalence.user.management.api.service.mapper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.nuvalence.user.management.api.service.entity.ApplicationEntity;
-import io.nuvalence.user.management.api.service.entity.ApplicationPreferenceEntity;
 import io.nuvalence.user.management.api.service.entity.PermissionEntity;
 import io.nuvalence.user.management.api.service.entity.RoleEntity;
 import io.nuvalence.user.management.api.service.entity.UserCustomFieldEntity;
@@ -24,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;

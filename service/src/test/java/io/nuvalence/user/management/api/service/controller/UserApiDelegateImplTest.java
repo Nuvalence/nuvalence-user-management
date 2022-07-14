@@ -71,7 +71,7 @@ public class UserApiDelegateImplTest {
         when(userRepository.findUserEntityByEmail(userEntity.getEmail())).thenReturn(Optional.of(userEntity));
 
         mockMvc.perform(get(
-                        "/api/v2/user/email/"))
+                        "/api/v2/user/email/" + userEntity.getEmail()))
                 .andExpect(status().isOk());
     }
 
