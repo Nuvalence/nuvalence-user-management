@@ -36,23 +36,23 @@ public class UserApiDelegateImpl implements UserApiDelegate {
     }
 
     @Override
-    public ResponseEntity<UserDTO> getUserById(UUID id, String resource) {
-        return userService.fetchUserById(id, resource);
+    public ResponseEntity<UserDTO> getUserById(UUID id) {
+        return userService.getUserById(id);
     }
 
     @Override
-    public ResponseEntity<UserDTO> getUserByEmail(String email, String resource) {
-        return userService.fetchUserByEmail(email, resource);
+    public ResponseEntity<UserDTO> getUserByEmail(String email) {
+        return userService.getUserByEmail(email);
     }
 
     @Override
-    public ResponseEntity<List<UserDTO>> getUserList(String resource) {
-        return userService.getUserList(resource);
+    public ResponseEntity<List<UserDTO>> getUserList() {
+        return userService.getUserList();
     }
 
     @Override
     public ResponseEntity<List<RoleDTO>> getUserRolesById(UUID id, String resource) {
-        return userService.fetchRolesByUserId(id, resource);
+        return userService.getUserRolesById(id, resource);
     }
 
     @Override
@@ -62,7 +62,7 @@ public class UserApiDelegateImpl implements UserApiDelegate {
 
     @Override
     public ResponseEntity<Void> removeRoleFromUser(UserRoleDTO userRole) {
-        return userService.removeRoleFormUser(userRole);
+        return userService.removeRoleFromUser(userRole);
     }
 
     @Override

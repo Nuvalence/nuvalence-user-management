@@ -97,10 +97,10 @@ public class RoleApiDelegateImplTest {
         RoleDTO role = createMockRoleDto();
         ResponseEntity<List<UserDTO>> res = ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
                 .body(List.of(user));
-        when(roleService.getUsersByRoleId(eq(role.getId()), ArgumentMatchers.anyString())).thenReturn(res);
+        when(roleService.getUsersByRoleId(eq(role.getId()))).thenReturn(res);
 
         mockMvc.perform(
-                        get("/api/v2/role/" + role.getId().toString() + "?resource=default_resource")
+                        get("/api/v2/role/" + role.getId().toString())
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].displayName").value(user.getDisplayName()));

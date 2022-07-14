@@ -1,7 +1,6 @@
 package io.nuvalence.user.management.api.service.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.nuvalence.user.management.api.service.cerbos.CerbosClient;
 import io.nuvalence.user.management.api.service.config.exception.BusinessLogicException;
 import io.nuvalence.user.management.api.service.config.exception.ResourceNotFoundException;
 import io.nuvalence.user.management.api.service.entity.CustomFieldEntity;
@@ -54,12 +53,12 @@ import java.util.stream.Collectors;
 @SuppressWarnings("checkstyle:ClassFanOutComplexity")
 public class UserService {
 
+    private final RoleService roleService;
     private final UserRepository userRepository;
     private final UserRoleRepository userRoleRepository;
     private final CustomFieldRepository customFieldRepository;
     private final UserCustomFieldRepository userCustomFieldRepository;
     private final RoleRepository roleRepository;
-    private final CerbosClient client;
 
     /**
      * Creates a User Entity from a user model.
@@ -254,7 +253,7 @@ public class UserService {
      * @param userRole is a DTO for a user role linkage
      * @return a response code for the call.
      */
-    public ResponseEntity<Void> removeRoleFormUser(UserRoleDTO userRole) {
+    public ResponseEntity<Void> removeRoleFromUser(UserRoleDTO userRole) {
         Optional<UserEntity> userEntity = userRepository.findById(userRole.getUserId());
         Optional<RoleEntity> roleEntity = roleRepository.findById(userRole.getRoleId());
 
@@ -272,46 +271,39 @@ public class UserService {
         return ResponseEntity.status(200).build();
     }
 
+
     /**
      * Returns a list of roles based on the user's id.
      *
-     * @param userId is a user's id.
-     * @param resourceName The name of the resource.
-     * @return a status code.
+     * @param userId is a user's id
+     * @param resourceName is the name of the resource
+     * @return a ResponseEntity containing a list of RoleDTOs
      */
-    public ResponseEntity<List<RoleDTO>> fetchRolesByUserId(UUID userId, String resourceName) {
+    public ResponseEntity<List<RoleDTO>> getUserRolesById(UUID userId, String resourceName) {
         Optional<UserEntity> userEntity = userRepository.findById(userId);
-
         if (userEntity.isEmpty()) {
             throw new ResourceNotFoundException("User not found!");
         }
         List<RoleEntity> roleEntities = userEntity.get().getUserRoleEntities().stream()
-                .map(UserRoleEntity::getRole).collect(Collectors.toList());
-
-        Map<String, String[]> rolePermissionMappings = client.getRolePermissionMappings(resourceName);
-        List<RoleDTO> roles = MapperUtils.mapRoleEntitiesToRoleList(roleEntities, rolePermissionMappings);
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(roles);
+            .map(UserRoleEntity::getRole).collect(Collectors.toList());
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
+            .body(roleService.getAllRolesInternal(resourceName, roleEntities));
     }
 
     /**
-     * Find all users in a List.
+     * Gets a list of all users.
      *
-     * @param resourceName The name of the resource.
-     * @return a list of roles based on the user's id.
+     * @return a list of UserDTOs
      */
-    public ResponseEntity<List<UserDTO>> getUserList(String resourceName) {
-
+    public ResponseEntity<List<UserDTO>> getUserList() {
         List<UserEntity> allUsers = userRepository.findAll();
-
         if (allUsers.isEmpty()) {
             throw new ResourceNotFoundException("No users found.");
         }
 
-        Map<String, String[]> rolePermissionMappings = client.getRolePermissionMappings(resourceName);
-
         List<UserDTO> users = allUsers.stream().map(u -> {
             UserDTO user = UserEntityMapper.INSTANCE.convertUserEntityToUserModel(u);
-            user.setAssignedRoles(MapperUtils.mapUserEntityToRoleList(u, rolePermissionMappings));
+            user.setAssignedRoles(MapperUtils.mapUserEntityToAssignedRoleList(u));
             return user;
         }).collect(Collectors.toList());
 
@@ -319,48 +311,23 @@ public class UserService {
     }
 
     /**
-     * Returns a user by the user's id.
+     * Returns a UserDTO based on the user's id.
      *
-     * @param userId is a user's id.
-     * @param resourceName The name of the resource.
-     * @return a status code and a user.
+     * @param userId is the user's id.
+     * @return a ResponseEntity with a UserDTO.
      */
-    public ResponseEntity<UserDTO> fetchUserById(UUID userId, String resourceName) {
-        Optional<UserEntity> userEntity = userRepository.findById(userId);
-
-        if (userEntity.isEmpty()) {
-            throw new ResourceNotFoundException("User not found!");
-        }
-
-        Map<String, String[]> rolePermissionMappings = client.getRolePermissionMappings(resourceName);
-
-        UserDTO user = UserEntityMapper.INSTANCE.convertUserEntityToUserModel(userEntity.get());
-        user.setAssignedRoles(MapperUtils.mapUserEntityToRoleList(userEntity.get(), rolePermissionMappings));
-        user.setCustomFields(MapperUtils.mapUserEntityToCustomFieldDtoList(userEntity.get()));
-
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(user);
+    public ResponseEntity<UserDTO> getUserById(UUID userId) {
+        return getUserInternal(userRepository.findById(userId));
     }
 
     /**
-     * Finds a user by their email.
+     * Returns a user based on the user's email.
      *
-     * @param email        user's email.
-     * @param resourceName The name of the resource.
-     * @return a user dto.
+     * @param email is the user's email.
+     * @return a ResponseEntity with a UserDTO.
      */
-    public ResponseEntity<UserDTO> fetchUserByEmail(String email, String resourceName) {
-        Optional<UserEntity> user = userRepository.findUserEntityByEmail(email);
-
-        if (user.isEmpty()) {
-            throw new ResourceNotFoundException("User not found!");
-        }
-
-        Map<String, String[]> rolePermissionMappings = client.getRolePermissionMappings(resourceName);
-
-        UserDTO userDto = UserEntityMapper.INSTANCE.convertUserEntityToUserModel(user.get());
-        userDto.setAssignedRoles(MapperUtils.mapUserEntityToRoleList(user.get(), rolePermissionMappings));
-        userDto.setCustomFields(MapperUtils.mapUserEntityToCustomFieldDtoList(user.get()));
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(userDto);
+    public ResponseEntity<UserDTO> getUserByEmail(String email) {
+        return getUserInternal(userRepository.findUserEntityByEmail(email));
     }
 
     /**
@@ -434,5 +401,20 @@ public class UserService {
                 userCustomFieldEntity.setCustomFieldValueString((String)userCustomField.getValue());
                 break;
         }
+    }
+
+    /**
+     * Helper function for returning a UserDTO based on a UserEntity.
+     * @param user a UserEntity to convert
+     * @return a UserDTO created from the UserEntity
+     */
+    private ResponseEntity<UserDTO> getUserInternal(Optional<UserEntity> user) {
+        if (user.isEmpty()) {
+            throw new ResourceNotFoundException("User not found!");
+        }
+
+        UserDTO userDto = UserEntityMapper.INSTANCE.convertUserEntityToUserModel(user.get());
+        userDto.setAssignedRoles(MapperUtils.mapUserEntityToAssignedRoleList(user.get()));
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(userDto);
     }
 }

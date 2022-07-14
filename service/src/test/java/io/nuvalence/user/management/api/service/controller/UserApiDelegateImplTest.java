@@ -60,7 +60,7 @@ public class UserApiDelegateImplTest {
         when(userRepository.findById(userEntity.getId())).thenReturn(Optional.of(userEntity));
 
         mockMvc.perform(get(
-                "/api/v2/user/" + userEntity.getId().toString() + "?resource=default_resource"))
+                "/api/v2/user/" + userEntity.getId().toString()))
                 .andExpect(status().isOk());
     }
 
@@ -71,7 +71,7 @@ public class UserApiDelegateImplTest {
         when(userRepository.findUserEntityByEmail(userEntity.getEmail())).thenReturn(Optional.of(userEntity));
 
         mockMvc.perform(get(
-                        "/api/v2/user/email/" + userEntity.getEmail() + "?resource=default_resource"))
+                        "/api/v2/user/email/"))
                 .andExpect(status().isOk());
     }
 
@@ -83,9 +83,9 @@ public class UserApiDelegateImplTest {
                 .convertUserEntityToUserModel(userEntity);
         ResponseEntity<List<UserDTO>> res = ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON).body(List.of(userModel));
-        when(userService.getUserList(ArgumentMatchers.anyString())).thenReturn(res);
+        when(userService.getUserList()).thenReturn(res);
 
-        mockMvc.perform(get("/api/v2/user?resource=default_resource")
+        mockMvc.perform(get("/api/v2/user")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id")
@@ -106,7 +106,7 @@ public class UserApiDelegateImplTest {
         String expectedRoleName = roles.get(0).getRoleName();
         String expectedRoleName1 = roles.get(1).getRoleName();
 
-        when(userService.fetchRolesByUserId(eq(userId), ArgumentMatchers.anyString())).thenReturn(res);
+        when(userService.getUserRolesById(eq(userId), ArgumentMatchers.anyString())).thenReturn(res);
         mockMvc.perform(get("/api/v2/user/" + userId.toString() + "/all-roles?resource=default_resource")
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -136,7 +136,7 @@ public class UserApiDelegateImplTest {
         UserRoleDTO userRole = createMockUserRoleDto();
 
         ResponseEntity<Void> res = ResponseEntity.status(200).build();
-        when(userService.removeRoleFormUser(userRole)).thenReturn(res);
+        when(userService.removeRoleFromUser(userRole)).thenReturn(res);
         final String postBody = new ObjectMapper().writeValueAsString(userRole);
 
         mockMvc.perform(

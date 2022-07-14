@@ -1,6 +1,8 @@
 package io.nuvalence.user.management.api.service.mapper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.nuvalence.user.management.api.service.entity.ApplicationEntity;
+import io.nuvalence.user.management.api.service.entity.ApplicationPreferenceEntity;
 import io.nuvalence.user.management.api.service.entity.PermissionEntity;
 import io.nuvalence.user.management.api.service.entity.RoleEntity;
 import io.nuvalence.user.management.api.service.entity.UserCustomFieldEntity;
@@ -10,8 +12,10 @@ import io.nuvalence.user.management.api.service.entity.UserPreferenceOptionEntit
 import io.nuvalence.user.management.api.service.entity.UserPreferenceTypeEntity;
 import io.nuvalence.user.management.api.service.entity.UserRoleEntity;
 import io.nuvalence.user.management.api.service.enums.CustomFieldType;
+import io.nuvalence.user.management.api.service.generated.models.AssignedRoleDTO;
 import io.nuvalence.user.management.api.service.generated.models.CustomFieldDataType;
 import io.nuvalence.user.management.api.service.generated.models.PermissionDTO;
+import io.nuvalence.user.management.api.service.generated.models.RoleApplicationDTO;
 import io.nuvalence.user.management.api.service.generated.models.RoleDTO;
 import io.nuvalence.user.management.api.service.generated.models.UserCustomFieldDTO;
 import io.nuvalence.user.management.api.service.generated.models.UserPreferenceDTO;
@@ -20,7 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -52,22 +55,50 @@ public class MapperUtils {
     /**
      * Simple list mapper for entity -> dto.
      *
-     * @param roleEntities           list of role entities
-     * @param rolePermissionMappings the mapping of roles to permissions
+     * @param roleEntities                      list of role entities
+     * @param applicationRolePermissionMappings the mapping of application roles to permissions
+     * @param apps                              list of application entities
      * @return list of role dto
      */
     public static List<RoleDTO> mapRoleEntitiesToRoleList(List<RoleEntity> roleEntities,
-                                                          Map<String, String[]> rolePermissionMappings) {
+                                                  Map<String, Map<String, String[]>> applicationRolePermissionMappings,
+                                                  List<ApplicationEntity> apps) {
+        // Loop over each role entity
         return roleEntities.stream().map(r -> {
+            // Convert to RoleDTO
             RoleDTO roleDto = RoleEntityMapper.INSTANCE.roleEntityToRoleDto(r);
-            String[] permissions = rolePermissionMappings.get(r.getRoleName());
-            if (permissions != null) {
-                roleDto.setPermissions(Arrays.asList(permissions));
-            } else {
-                roleDto.setPermissions(Collections.emptyList());
+            // Create a new list for the applications that have permissions for this role
+            List<RoleApplicationDTO> raDTOs = new ArrayList<>();
+            // Loop over each application
+            for (ApplicationEntity app : apps) {
+                // Extract the relevant permissions
+                Map<String, String[]> rolePermissionMap = applicationRolePermissionMappings.get(app.getName());
+                String[] permissions = rolePermissionMap.get(r.getRoleName());
+                if (permissions != null) {
+                    // Create and fill RoleApplicationDTOs for each application permission
+                    RoleApplicationDTO raDTO = new RoleApplicationDTO();
+                    raDTO.setApplicationId(app.getId());
+                    raDTO.setName(app.getName());
+                    raDTO.setDisplayName(app.getDisplayName());
+                    raDTO.setPermissions(Arrays.asList(permissions));
+                    raDTOs.add(raDTO);
+                }
             }
+            // Save the applications to the role and return
+            roleDto.setApplications(raDTOs);
             return roleDto;
         }).collect(Collectors.toList());
+    }
+
+    /**
+     * Simple list mapper for RoleEntities -> AssignedRoleDTOs.
+     *
+     * @param roleEntities list of RoleEntities
+     * @return list of AssignedRoleDTOs
+     */
+    public static List<AssignedRoleDTO> mapRoleEntitiesToAssignedRoleList(List<RoleEntity> roleEntities) {
+        return roleEntities.stream().map(RoleEntityMapper.INSTANCE::roleEntityToAssignedRoleDto)
+            .collect(Collectors.toList());
     }
 
     /**
@@ -118,34 +149,17 @@ public class MapperUtils {
     }
 
     /**
-     * Simple list mapper for user => role list.
-     * @param user the user
-     * @return a list of roles
+     * Simple list mapper for UserEntities to a list of AssignedRoleDTOs.
+     * @param user a UserEntity
+     * @return a list of AssignedRoleDTOs
      */
-    public static List<RoleDTO> mapUserEntityToRoleList(UserEntity user) {
+    public static List<AssignedRoleDTO> mapUserEntityToAssignedRoleList(UserEntity user) {
         if (user.getUserRoleEntities() == null) {
             return null;
         }
 
-        return mapRoleEntitiesToRoleList(user.getUserRoleEntities().stream()
-                .map(UserRoleEntity::getRole).collect(Collectors.toList()));
-    }
-
-    /**
-     * Simple list mapper for user => role list.
-     * @param user the user
-     * @param rolePermissionMappings the mapping of roles to permissions
-     * @return a list of roles
-     */
-    public static List<RoleDTO> mapUserEntityToRoleList(UserEntity user,
-                                                        Map<String, String[]> rolePermissionMappings) {
-
-        if (user.getUserRoleEntities() == null) {
-            return null;
-        }
-
-        return mapRoleEntitiesToRoleList(user.getUserRoleEntities().stream()
-                .map(UserRoleEntity::getRole).collect(Collectors.toList()), rolePermissionMappings);
+        return mapRoleEntitiesToAssignedRoleList(user.getUserRoleEntities().stream()
+            .map(UserRoleEntity::getRole).collect(Collectors.toList()));
     }
 
     /**
