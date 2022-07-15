@@ -42,6 +42,7 @@ import java.util.stream.Collectors;
 @Transactional
 @RequiredArgsConstructor
 @Slf4j
+@SuppressWarnings("checkstyle:ClassFanOutComplexity")
 public class RoleService {
 
     private final RoleRepository roleRepository;
