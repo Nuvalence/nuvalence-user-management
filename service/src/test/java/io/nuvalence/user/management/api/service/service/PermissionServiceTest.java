@@ -202,12 +202,20 @@ public class PermissionServiceTest {
     @Test
     public void getAllPermissions_gets_permissions() {
         PermissionEntity permissionEntity = createPermissionEntity();
+        permissionEntity.setApplicationPermissionEntities(List.of(createApplicationPermissionEntity(permissionEntity)));
         when(permissionRepository.findAll()).thenReturn(List.of(permissionEntity));
 
         ResponseEntity<List<PermissionDTO>> res = permissionService.getAllPermissions();
 
-        assertEquals(res.getStatusCode(), HttpStatus.OK);
-        assertEquals(Objects.requireNonNull(res.getBody()).size(), 1);
+        assertEquals(HttpStatus.OK, res.getStatusCode());
+        assertEquals(1, Objects.requireNonNull(res.getBody()).size());
+        assertEquals(permissionEntity.getName(), res.getBody().get(0).getName());
+        assertEquals(permissionEntity.getDisplayName(), res.getBody().get(0).getDisplayName());
+        assertEquals(permissionEntity.getDescription(), res.getBody().get(0).getDescription());
+        assertEquals(permissionEntity.getApplicationPermissionEntities().get(0).getApplication().getName(),
+            res.getBody().get(0).getApplications().get(0).getName());
+        assertEquals(permissionEntity.getApplicationPermissionEntities().get(0).getApplication().getDisplayName(),
+            res.getBody().get(0).getApplications().get(0).getDisplayName());
         verify(permissionRepository).findAll();
     }
 

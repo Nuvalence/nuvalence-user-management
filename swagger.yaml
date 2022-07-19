@@ -1244,6 +1244,8 @@ definitions:
         format: uuid
       name:
         type: string
+      displayName:
+        type: string
   AllUserPreferenceTypes:
     type: array
     items:
