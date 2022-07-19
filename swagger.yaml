@@ -26,11 +26,6 @@ paths:
           required: true
           type: "string"
           format: uuid
-        - name: "resource"
-          in: "query"
-          description: "Name of the resource "
-          required: false
-          type: "string"
       responses:
         "200":
           description: "successful operation"
@@ -77,11 +72,6 @@ paths:
           in: "path"
           description: "Email of the user to retrieve"
           required: true
-          type: "string"
-        - name: "resource"
-          in: "query"
-          description: "Name of the resource "
-          required: false
           type: "string"
       responses:
         "200":
@@ -142,13 +132,13 @@ paths:
       parameters:
         - name: "id"
           in: "path"
-          description: "id of the user to retrieve roles for "
+          description: "id of the user to retrieve roles for"
           required: true
           type: "string"
           format: uuid
         - name: "resource"
           in: "query"
-          description: "Name of the resource "
+          description: "Name of the resource"
           required: false
           type: "string"
       responses:
@@ -272,12 +262,6 @@ paths:
         - "user"
       summary: "Get all users"
       operationId: "getUserList"
-      parameters:
-        - name: "resource"
-          in: "query"
-          description: "Name of the resource "
-          required: false
-          type: "string"
       responses:
         "200":
           description: "successful operation"
@@ -427,7 +411,7 @@ paths:
     get:
       tags:
         - "role"
-      summary: "get all users by role"
+      summary: "Get all users by role"
       operationId: "getUsersByRole"
       parameters:
         - name: "id"
@@ -436,11 +420,6 @@ paths:
           required: true
           type: "string"
           format: uuid
-        - name: "resource"
-          in: "query"
-          description: "Name of the resource"
-          required: false
-          type: "string"
       responses:
         "200":
           description: "Successful operation"
@@ -885,7 +864,7 @@ definitions:
       assignedRoles:
         type: array
         items:
-          $ref: '#/definitions/RoleDTO'
+          $ref: '#/definitions/AssignedRoleDTO'
       preferences:
         type: object
         $ref: '#/definitions/UserPreferenceDTO'
@@ -893,6 +872,20 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/UserCustomFieldDTO'
+  AssignedRoleDTO:
+    type: object
+    required:
+      - roleName
+      - displayName
+    properties:
+      id:
+        type: string
+        format: uuid
+      roleName:
+        type: string
+      displayName:
+        type:
+          string
   RoleDTO:
     type: object
     required:
@@ -906,10 +899,10 @@ definitions:
         type: string
       displayName:
         type: string
-      permissions:
+      applications:
         type: array
         items:
-          type: string
+          $ref: '#/definitions/RoleApplicationDTO'
   RoleApplicationDTO:
     type: object
     required:
@@ -919,6 +912,10 @@ definitions:
       applicationId:
         type: string
         format: uuid
+      name:
+        type: string
+      displayName:
+        type: string
       permissions:
         type: array
         items:

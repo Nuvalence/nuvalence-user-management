@@ -28,6 +28,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -42,7 +43,7 @@ import java.util.stream.Collectors;
 @Transactional
 @RequiredArgsConstructor
 @Slf4j
-@SuppressWarnings("checkstyle:ClassFanOutComplexity")
+@SuppressWarnings({"checkstyle:ClassFanOutComplexity"})
 public class RoleService {
 
     private final RoleRepository roleRepository;
@@ -124,27 +125,40 @@ public class RoleService {
      * @return a list of all the roles.
      */
     public ResponseEntity<List<RoleDTO>> getAllRolesByResource(String resourceName) {
-        List<RoleEntity> roleEntities = roleRepository.findAll();
-
-        Map<String, String[]> rolePermissionMappings = client.getRolePermissionMappings(resourceName);
-        List<RoleDTO> roles = MapperUtils.mapRoleEntitiesToRoleList(roleEntities, rolePermissionMappings);
-
-        // TODO: find permissions by roles
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(roles);
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
+            .body(getAllRolesInternal(resourceName, null));
     }
 
     /**
-     * Fetches a list of all roles that exist.
-     *
-     * @return a list of all the roles.
+     * Internal function to get all roles (including application permission information)
+     * based on an optional resourceName (all resources if null) and provided roleEntities
+     * (all roles if none).
+     * @param resourceName optional resource / application name to use instead of all applications
+     * @param roleEntities optional list of role entities to use instead of all roles
+     * @return a list of RoleDTOs matching the provided parameters
      */
-    public ResponseEntity<List<RoleDTO>> getAllRoles() {
-        List<RoleEntity> roleEntities = roleRepository.findAll();
+    public List<RoleDTO> getAllRolesInternal(String resourceName, List<RoleEntity> roleEntities) {
+        List<ApplicationEntity> applicationEntities;
+        if (resourceName == null) {
+            applicationEntities = applicationRepository.findAll();
+        } else {
+            ApplicationEntity applicationEntity =
+                applicationRepository.getApplicationByName(resourceName)
+                    .orElseThrow(() -> new ResourceNotFoundException("No application found with this resource name"));
+            applicationEntities = new ArrayList<>();
+            applicationEntities.add(applicationEntity);
+        }
 
-        List<RoleDTO> roles = MapperUtils.mapRoleEntitiesToRoleList(roleEntities);
+        if (roleEntities == null) {
+            roleEntities = roleRepository.findAll();
+        }
 
-        // TODO: find permissions by roles
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(roles);
+        Map<String, Map<String, String[]>> applicationRolePermissionMappings = new HashMap<>();
+        for (ApplicationEntity app : applicationEntities) {
+            applicationRolePermissionMappings.put(app.getName(), client.getRolePermissionMappings(app.getName()));
+        }
+        return MapperUtils.mapRoleEntitiesToRoleList(roleEntities,
+            applicationRolePermissionMappings, applicationEntities);
     }
 
     /**
@@ -169,21 +183,17 @@ public class RoleService {
      * Returns a list of users that contain the checked role.
      *
      * @param roleId describes a role id.
-     * @param resourceName The name of the resource.
      * @return a list of userDTOs that have that role.
      */
-    public ResponseEntity<List<UserDTO>> getUsersByRoleId(UUID roleId, String resourceName) {
+    public ResponseEntity<List<UserDTO>> getUsersByRoleId(UUID roleId) {
         Optional<RoleEntity> roleCheck = roleRepository.findById(roleId);
-
         if (roleCheck.isEmpty()) {
             throw new ResourceNotFoundException("There is no role with this id");
         }
 
-        Map<String, String[]> rolePermissionMappings = client.getRolePermissionMappings(resourceName);
-
         List<UserDTO> users = userRoleRepository.findAllByRoleId(roleId).stream().map(userRole -> {
             UserDTO user = UserEntityMapper.INSTANCE.convertUserEntityToUserModel(userRole.getUser());
-            user.setAssignedRoles(MapperUtils.mapUserEntityToRoleList(userRole.getUser(), rolePermissionMappings));
+            user.setAssignedRoles(MapperUtils.mapUserEntityToAssignedRoleList(userRole.getUser()));
             return user;
         }).collect(Collectors.toList());
 

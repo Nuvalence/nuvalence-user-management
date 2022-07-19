@@ -2,7 +2,6 @@ package io.nuvalence.user.management.api.service.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.nuvalence.user.management.api.service.cerbos.CerbosClient;
 import io.nuvalence.user.management.api.service.config.exception.BusinessLogicException;
 import io.nuvalence.user.management.api.service.config.exception.ResourceNotFoundException;
 import io.nuvalence.user.management.api.service.entity.CustomFieldDataTypeEntity;
@@ -13,6 +12,7 @@ import io.nuvalence.user.management.api.service.entity.UserCustomFieldEntity;
 import io.nuvalence.user.management.api.service.entity.UserEntity;
 import io.nuvalence.user.management.api.service.entity.UserRoleEntity;
 import io.nuvalence.user.management.api.service.enums.CustomFieldDataType;
+import io.nuvalence.user.management.api.service.generated.models.AssignedRoleDTO;
 import io.nuvalence.user.management.api.service.generated.models.CreateOrUpdateUserCustomFieldDTO;
 import io.nuvalence.user.management.api.service.generated.models.RoleDTO;
 import io.nuvalence.user.management.api.service.generated.models.UserCreationRequest;
@@ -20,7 +20,6 @@ import io.nuvalence.user.management.api.service.generated.models.UserCustomField
 import io.nuvalence.user.management.api.service.generated.models.UserDTO;
 import io.nuvalence.user.management.api.service.generated.models.UserRoleDTO;
 import io.nuvalence.user.management.api.service.generated.models.UserUpdateRequest;
-import io.nuvalence.user.management.api.service.mapper.MapperUtils;
 import io.nuvalence.user.management.api.service.repository.CustomFieldRepository;
 import io.nuvalence.user.management.api.service.repository.RoleRepository;
 import io.nuvalence.user.management.api.service.repository.UserCustomFieldRepository;
@@ -30,7 +29,6 @@ import org.assertj.core.util.IterableUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.ArgumentMatchers;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -51,6 +49,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.times;
@@ -66,6 +66,9 @@ public class UserServiceTest {
     private RoleRepository roleRepository;
 
     @Mock
+    private RoleService roleService;
+
+    @Mock
     private UserRoleRepository userRoleRepository;
 
     @Mock
@@ -73,9 +76,6 @@ public class UserServiceTest {
 
     @Mock
     private CustomFieldRepository customFieldRepository;
-
-    @Mock
-    private CerbosClient client;
 
     @InjectMocks
     private UserService userService;
@@ -95,7 +95,7 @@ public class UserServiceTest {
     @Captor
     private ArgumentCaptor<UserRoleEntity> userRoleCaptor;
 
-    // create user tests.
+    // Create user tests.
     @Test
     public void createUser_creates_a_user() {
         UserCreationRequest userModel = createUserCreationRequest();
@@ -212,6 +212,7 @@ public class UserServiceTest {
         assertTrue(exception.getMessage().contains("No custom field found with id: "
                 + customField.getCustomFieldId().toString()));
     }
+
 
     // Update user tests.
     @Test
@@ -431,6 +432,7 @@ public class UserServiceTest {
         verify(userRepository, times(0)).save(any());
     }
 
+
     // Delete User Tests.
     @Test
     public void deleteUser_deletesUserCorrectly() {
@@ -504,7 +506,8 @@ public class UserServiceTest {
         assertTrue(exception.getMessage().contains("User or Role not found."));
     }
 
-    // Remove Roll from User Tests
+
+    // Remove Role from User Tests
     @Test
     public void removeRoleToUser_assignsRoleIfValid() {
         UserRoleDTO userRole = createUserRoleDto();
@@ -517,7 +520,7 @@ public class UserServiceTest {
         when(userRoleRepository.findByUserAndRole(userEntity.get(),
                 roleEntity.get())).thenReturn(userRoleEntity);
 
-        ResponseEntity<Void> res = userService.removeRoleFormUser(userRole);
+        ResponseEntity<Void> res = userService.removeRoleFromUser(userRole);
         assertEquals(res.getStatusCode(), HttpStatus.OK);
         verify(userRoleRepository).delete(userRoleEntity);
     }
@@ -530,7 +533,7 @@ public class UserServiceTest {
         when(roleRepository.findById(roleEntity.get().getId())).thenReturn(roleEntity);
 
         Exception exception = assertThrows(ResourceNotFoundException.class, () -> {
-            userService.removeRoleFormUser(userRole);
+            userService.removeRoleFromUser(userRole);
         });
         assertTrue(exception.getMessage().contains("User or Role not found."));
     }
@@ -543,7 +546,7 @@ public class UserServiceTest {
         when(roleRepository.findById(roleEntity.get().getId())).thenReturn(roleEntity);
 
         Exception exception = assertThrows(ResourceNotFoundException.class, () -> {
-            userService.removeRoleFormUser(userRole);
+            userService.removeRoleFromUser(userRole);
         });
         assertTrue(exception.getMessage().contains("User or Role not found."));
     }
@@ -558,109 +561,99 @@ public class UserServiceTest {
         when(roleRepository.findById(roleEntity.get().getId())).thenReturn(roleEntity);
 
         Exception exception = assertThrows(BusinessLogicException.class, () -> {
-            userService.removeRoleFormUser(userRole);
+            userService.removeRoleFromUser(userRole);
         });
         assertTrue(exception.getMessage().contains("The role requested does not exist on John Locke."));
     }
 
-    // Fetch Roles by UserId Tests
+
+    // Get Roles by UserId Tests
     @Test
-    public void fetchRolesByUserId_assignsRoleIfValid() {
+    public void getRolesByUserId_getsRolesIfValid() {
         Optional<UserEntity> userEntity = Optional.of(createUserEntity());
         UserRoleEntity userRoleEntity = createUserRoleEntity();
         userEntity.get().setUserRoleEntities(List.of(userRoleEntity));
 
+        String resourceName = "default_resource";
         when(userRepository.findById(userEntity.get().getId())).thenReturn(userEntity);
-        when(client.getRolePermissionMappings(ArgumentMatchers.anyString())).thenReturn(Collections.emptyMap());
+        when(roleService.getAllRolesInternal(eq(resourceName), anyList())).thenReturn(List.of(createRoleDto()));
 
-        ResponseEntity<List<RoleDTO>> res = userService.fetchRolesByUserId(userEntity.get().getId(),
-                "default_resource");
-        assertEquals(res.getStatusCode(), HttpStatus.OK);
-        assertEquals(res.getBody(), List.of(createRoleDto()));
+        ResponseEntity<List<RoleDTO>> res = userService.getUserRolesById(userEntity.get().getId(), resourceName);
+        assertEquals(HttpStatus.OK, res.getStatusCode());
+        assertEquals(List.of(createRoleDto()), res.getBody());
     }
 
     @Test
-    public void fetchRolesByUserId_fails_ifUserDoesNotExist() {
+    public void getRolesByUserId_fails_ifUserDoesNotExist() {
         Optional<UserEntity> userEntity = Optional.of(createUserEntity());
 
-        Exception exception = assertThrows(ResourceNotFoundException.class, () -> {
-            userService.fetchRolesByUserId(userEntity.get().getId(), "default_resource");
-        });
+        Exception exception = assertThrows(ResourceNotFoundException.class, () ->
+            userService.getUserRolesById(userEntity.get().getId(), "default_resource"));
         assertEquals(exception.getMessage(), "User not found!");
     }
 
-    // Fetch Users Tests
+    // Get Users Tests
     @Test
     public void getUserList_returnsUserListIfValid() {
         List<UserEntity> userEntities = List.of(createUserEntity());
+        userEntities.get(0).setUserRoleEntities(List.of(createUserRoleEntity()));
 
         when(userRepository.findAll()).thenReturn(userEntities);
-        when(client.getRolePermissionMappings(ArgumentMatchers.anyString())).thenReturn(Collections.emptyMap());
-        ResponseEntity<List<UserDTO>> res = userService.getUserList("default_resource");
+
+        ResponseEntity<List<UserDTO>> res = userService.getUserList();
         assertEquals(res.getStatusCode(), HttpStatus.OK);
-        assertEquals(res.getBody(), List.of(createUserDto()));
+        UserDTO userDTO = createUserDto();
+        userDTO.setAssignedRoles(List.of(createAssignedRoleDto()));
+        assertEquals(res.getBody(), List.of(userDTO));
     }
 
     @Test
     public void getUserList_fails_ifNoUsersExist() {
-        Exception exception = assertThrows(ResourceNotFoundException.class, () -> {
-            userService.getUserList("default_resource");
-        });
+        Exception exception = assertThrows(ResourceNotFoundException.class, () -> userService.getUserList());
         assertEquals(exception.getMessage(), "No users found.");
     }
 
-    // Fetch User by Id Tests.
+    // Get User by ID Tests.
     @Test
-    public void fetchUserById_returnsUserIfValid() {
+    public void getUserById_returnsUserIfValid() {
         Optional<UserEntity> userEntity = Optional.of(createUserEntity());
         userEntity.get().setUserRoleEntities(List.of(createUserRoleEntity()));
-        userEntity.get().setCustomFields(createUserCustomFieldEntityList());
-        UserDTO user = createUserDto();
-        user.setAssignedRoles(List.of(createRoleDto()));
-        user.setCustomFields(userEntity.get().getCustomFields()
-                .stream().map(MapperUtils::mapUserCustomFieldEntityToDto)
-                .collect(Collectors.toList()));
-
         when(userRepository.findById(userEntity.get().getId())).thenReturn(userEntity);
-        when(client.getRolePermissionMappings(ArgumentMatchers.anyString())).thenReturn(Collections.emptyMap());
+        UserDTO user = createUserDto();
+        user.setAssignedRoles(List.of(createAssignedRoleDto()));
 
-        ResponseEntity<UserDTO> res = userService.fetchUserById(userEntity.get().getId(), "default_resource");
-        assertEquals(res.getStatusCode(), HttpStatus.OK);
-        assertEquals(res.getBody(), user);
+        ResponseEntity<UserDTO> res = userService.getUserById(userEntity.get().getId());
+        assertEquals(HttpStatus.OK, res.getStatusCode());
+        assertEquals(user, res.getBody());
     }
 
     @Test
-    public void fetchUserById_fails_ifNoUserExists() {
+    public void getUserById_fails_ifNoUserExists() {
         Optional<UserEntity> userEntity = Optional.of(createUserEntity());
-
-        Exception exception = assertThrows(ResourceNotFoundException.class, () -> {
-            userService.fetchUserById(userEntity.get().getId(), "default_resource");
-        });
-        assertEquals(exception.getMessage(), "User not found!");
+        Exception exception = assertThrows(ResourceNotFoundException.class, () ->
+            userService.getUserById(userEntity.get().getId()));
+        assertEquals("User not found!", exception.getMessage());
     }
 
     @Test
-    public void fetchUserByEmail_returnsUserIfValid() {
+    public void getUserByEmail_returnsUserIfValid() {
         Optional<UserEntity> userEntity = Optional.of(createUserEntity());
         userEntity.get().setUserRoleEntities(List.of(createUserRoleEntity()));
-        UserDTO user = createUserDto();
-        user.setAssignedRoles(List.of(createRoleDto()));
-
         when(userRepository.findUserEntityByEmail(userEntity.get().getEmail())).thenReturn(userEntity);
+        UserDTO user = createUserDto();
+        user.setAssignedRoles(List.of(createAssignedRoleDto()));
 
-        ResponseEntity<UserDTO> res = userService.fetchUserByEmail(userEntity.get().getEmail(), "default_resource");
+        ResponseEntity<UserDTO> res = userService.getUserByEmail(userEntity.get().getEmail());
         assertEquals(res.getStatusCode(), HttpStatus.OK);
-        assertEquals(res.getBody(), user);
+        assertEquals(user, res.getBody());
     }
 
     @Test
-    public void fetchUserByEmail_fails_ifNoUserExists() {
+    public void getUserByEmail_fails_ifNoUserExists() {
         Optional<UserEntity> userEntity = Optional.of(createUserEntity());
-
-        Exception exception = assertThrows(ResourceNotFoundException.class, () -> {
-            userService.fetchUserByEmail(userEntity.get().getEmail(), "default_resource");
-        });
-        assertEquals(exception.getMessage(), "User not found!");
+        Exception exception = assertThrows(ResourceNotFoundException.class, () ->
+            userService.getUserByEmail(userEntity.get().getEmail()));
+        assertEquals("User not found!", exception.getMessage());
     }
 
     @Test
@@ -725,13 +718,23 @@ public class UserServiceTest {
         RoleDTO role = new RoleDTO();
         role.setId(UUID.fromString("af102616-4207-4850-adc4-0bf91058a261"));
         role.setRoleName("ROLE_TO_TEST");
-        role.setPermissions(Collections.emptyList());
+        role.setDisplayName("Role To Test");
+        role.setApplications(Collections.emptyList());
+        return role;
+    }
+
+    private AssignedRoleDTO createAssignedRoleDto() {
+        AssignedRoleDTO role = new AssignedRoleDTO();
+        role.setId(UUID.fromString("af102616-4207-4850-adc4-0bf91058a261"));
+        role.setRoleName("ROLE_TO_TEST");
+        role.setDisplayName("Role To Test");
         return role;
     }
 
     private RoleEntity createRoleEntity() {
         RoleEntity roleEntity = new RoleEntity();
         roleEntity.setRoleName("ROLE_TO_TEST");
+        roleEntity.setDisplayName("Role To Test");
         roleEntity.setId(UUID.fromString("af102616-4207-4850-adc4-0bf91058a261"));
         return roleEntity;
     }

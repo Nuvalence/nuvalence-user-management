@@ -31,12 +31,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -69,7 +72,7 @@ public class RoleServiceTest {
     @Captor
     private ArgumentCaptor<RoleEntity> roleCaptor;
 
-    // Add Role.
+    // Add role tests
     @Test
     public void addRole_addsRoleIfValid() {
         RoleCreationRequest roleCreationRequest = createRoleCreationRequest();
@@ -117,7 +120,8 @@ public class RoleServiceTest {
         assertEquals("This role already exists.", exception.getMessage());
     }
 
-    // Update role
+
+    // Update role tests
     @Test
     public void updateRole_updatesRoleIfValid() {
         RoleEntity roleEntity = createRoleEntity();
@@ -206,38 +210,128 @@ public class RoleServiceTest {
         assertEquals("The provided permission 'Invalid_Role' is invalid.", exception.getMessage());
     }
 
-    // Get All Roles.
 
+    // Get all roles tests
     @Test
     public void getAllRoles_returnsAllRoles() {
-        RoleEntity role = createRoleEntity();
+        // Create two applications, one with 1 permission and one with 2 permissions
+        ApplicationEntity a1 = createApplicationEntityAndPermissions(1, 1);
+        ApplicationEntity a2 = createApplicationEntityAndPermissions(2, 2);
 
-        when(roleRepository.findAll()).thenReturn(List.of(role));
+        // Add them to a new list for mocking the application repository
+        List<ApplicationEntity> applicationEntities = new ArrayList<>();
+        applicationEntities.add(a1);
+        applicationEntities.add(a2);
+        when(applicationRepository.findAll()).thenReturn(applicationEntities);
 
-        ResponseEntity<List<RoleDTO>> res = roleService.getAllRoles();
-        assertEquals(res.getStatusCode(), HttpStatus.OK);
-        RoleDTO roleDto = createRoleDto();
-        roleDto.setPermissions(null);
-        assertEquals(res.getBody(), List.of(roleDto));
+        // Create some roles to test with and for mocking the role repository
+        ArrayList<RoleEntity> roleEntities = new ArrayList<>();
+        roleEntities.add(createNumberedRoleEntity(1));
+        roleEntities.add(createNumberedRoleEntity(2));
+        roleEntities.add(createNumberedRoleEntity(3));
+        when(roleRepository.findAll()).thenReturn(roleEntities);
+
+        // Create the permission mappings for mocking the Cerbos client
+        Map<String, String[]> app1PermissionMappings = new HashMap<>();
+        String[] app1PermissionMappingsValue = {a1.getPermissions().get(0).getPermission().getName()};
+        app1PermissionMappings.put(roleEntities.get(0).getRoleName(), app1PermissionMappingsValue);
+        when(client.getRolePermissionMappings(a1.getName())).thenReturn(app1PermissionMappings);
+
+        Map<String, String[]> app2PermissionMappings = new HashMap<>();
+        String[] app2PermissionMappingsValue = {
+            a2.getPermissions().get(0).getPermission().getName(),
+            a2.getPermissions().get(1).getPermission().getName()
+        };
+        app2PermissionMappings.put(roleEntities.get(1).getRoleName(), app2PermissionMappingsValue);
+        when(client.getRolePermissionMappings(a2.getName())).thenReturn(app2PermissionMappings);
+
+        // Make the request
+        ResponseEntity<List<RoleDTO>> rawRes = roleService.getAllRolesByResource(null);
+        assertEquals(rawRes.getStatusCode(), HttpStatus.OK);
+
+        // Validate main response structure
+        List<RoleDTO> res = rawRes.getBody();
+        assertNotNull(res);
+        assertEquals(3, res.size());
+
+        // Validate role 1
+        assertEquals(roleEntities.get(0).getRoleName(), res.get(0).getRoleName());
+        assertEquals(roleEntities.get(0).getDisplayName(), res.get(0).getDisplayName());
+        assertEquals(1, res.get(0).getApplications().size());
+        assertEquals(a1.getId(), res.get(0).getApplications().get(0).getApplicationId());
+        assertEquals(a1.getName(), res.get(0).getApplications().get(0).getName());
+        assertEquals(a1.getDisplayName(), res.get(0).getApplications().get(0).getDisplayName());
+        assertEquals(1, res.get(0).getApplications().get(0).getPermissions().size());
+        assertEquals(a1.getPermissions().get(0).getPermission().getName(),
+            res.get(0).getApplications().get(0).getPermissions().get(0));
+
+        // Validate role 2
+        assertEquals(roleEntities.get(1).getRoleName(), res.get(1).getRoleName());
+        assertEquals(roleEntities.get(1).getDisplayName(), res.get(1).getDisplayName());
+        assertEquals(1, res.get(1).getApplications().size());
+        assertEquals(a2.getId(), res.get(1).getApplications().get(0).getApplicationId());
+        assertEquals(a2.getName(), res.get(1).getApplications().get(0).getName());
+        assertEquals(a2.getDisplayName(), res.get(1).getApplications().get(0).getDisplayName());
+        assertEquals(2, res.get(1).getApplications().get(0).getPermissions().size());
+        assertEquals(a2.getPermissions().get(0).getPermission().getName(),
+            res.get(1).getApplications().get(0).getPermissions().get(0));
+        assertEquals(a2.getPermissions().get(1).getPermission().getName(),
+            res.get(1).getApplications().get(0).getPermissions().get(1));
+
+        // Validate role 3
+        assertEquals(roleEntities.get(2).getRoleName(), res.get(2).getRoleName());
+        assertEquals(roleEntities.get(2).getDisplayName(), res.get(2).getDisplayName());
+        assertEquals(0, res.get(2).getApplications().size());
     }
 
     @Test
     public void getAllRolesByResource_returnsAllRoles() {
-        RoleEntity role = createRoleEntity();
+        // Create an application (with 1 permission) and set up mocking
+        ApplicationEntity a1 = createApplicationEntityAndPermissions(1, 1);
+        when(applicationRepository.getApplicationByName(a1.getName())).thenReturn(Optional.of(a1));
 
-        when(roleRepository.findAll()).thenReturn(List.of(role));
-        when(client.getRolePermissionMappings(ArgumentMatchers.anyString()))
-                .thenReturn(Collections.emptyMap());
+        // Create some roles to test with and for mocking the role repository
+        ArrayList<RoleEntity> roleEntities = new ArrayList<>();
+        roleEntities.add(createNumberedRoleEntity(1));
+        roleEntities.add(createNumberedRoleEntity(2));
+        when(roleRepository.findAll()).thenReturn(roleEntities);
 
-        ResponseEntity<List<RoleDTO>> res = roleService.getAllRolesByResource("default_resource");
-        assertEquals(res.getStatusCode(), HttpStatus.OK);
-        RoleDTO roleDto = createRoleDto();
-        roleDto.setPermissions(Collections.emptyList());
-        assertEquals(res.getBody(), List.of(roleDto));
+        // Create the permission mappings for mocking the Cerbos client
+        // Note: Only the first role is given a mapping since we want to test that both roles show up and that
+        // only the correct application is shown for the correct role
+        Map<String, String[]> app1PermissionMappings = new HashMap<>();
+        String[] app1PermissionMappingsValue = {a1.getPermissions().get(0).getPermission().getName()};
+        app1PermissionMappings.put(roleEntities.get(0).getRoleName(), app1PermissionMappingsValue);
+        when(client.getRolePermissionMappings(a1.getName())).thenReturn(app1PermissionMappings);
+
+        // Make the request
+        ResponseEntity<List<RoleDTO>> rawRes = roleService.getAllRolesByResource(a1.getName());
+        assertEquals(rawRes.getStatusCode(), HttpStatus.OK);
+
+        // Validate main response structure
+        List<RoleDTO> res = rawRes.getBody();
+        assertNotNull(res);
+        assertEquals(2, res.size());
+
+        // Validate role 1
+        assertEquals(roleEntities.get(0).getRoleName(), res.get(0).getRoleName());
+        assertEquals(roleEntities.get(0).getDisplayName(), res.get(0).getDisplayName());
+        assertEquals(1, res.get(0).getApplications().size());
+        assertEquals(a1.getId(), res.get(0).getApplications().get(0).getApplicationId());
+        assertEquals(a1.getName(), res.get(0).getApplications().get(0).getName());
+        assertEquals(a1.getDisplayName(), res.get(0).getApplications().get(0).getDisplayName());
+        assertEquals(1, res.get(0).getApplications().get(0).getPermissions().size());
+        assertEquals(a1.getPermissions().get(0).getPermission().getName(),
+            res.get(0).getApplications().get(0).getPermissions().get(0));
+
+        // Validate role 2
+        assertEquals(roleEntities.get(1).getRoleName(), res.get(1).getRoleName());
+        assertEquals(roleEntities.get(1).getDisplayName(), res.get(1).getDisplayName());
+        assertEquals(0, res.get(1).getApplications().size());
     }
 
-    // Delete Role.
 
+    // Delete role tests
     @Test
     public void deleteRoleById_deletesRoleIfValid() {
         RoleEntity role = createRoleEntity();
@@ -261,20 +355,19 @@ public class RoleServiceTest {
         assertEquals(exception.getMessage(), "There is no role that exists with this id.");
     }
 
-    // Get Users by Role id.
+
+    // Get users by role ID tests
     @Test
     public void getUsersByRoleId_returnsUsersIfValid() {
         RoleEntity role = createRoleEntity();
-        List<UserRoleEntity> userRoleEntities = generateUserRoleList();
+        List<UserRoleEntity> userRoleEntities = createUserRoleList();
 
         when(roleRepository.findById(role.getId())).thenReturn(Optional.of(role));
         when(userRoleRepository.findAllByRoleId(role.getId())).thenReturn(userRoleEntities);
-        when(client.getRolePermissionMappings(ArgumentMatchers.anyString()))
-                .thenReturn(Collections.emptyMap());
 
-        ResponseEntity<List<UserDTO>> res = roleService.getUsersByRoleId(role.getId(), "default_resource");
+        ResponseEntity<List<UserDTO>> res = roleService.getUsersByRoleId(role.getId());
         assertEquals(res.getStatusCode(), HttpStatus.OK);
-        assertEquals(res.getBody().size(), 2);
+        assertEquals(Objects.requireNonNull(res.getBody()).size(), 2);
 
         // Dynamic check both array lists with one loop
         for (int i = 0; i < res.getBody().size(); i++) {
@@ -288,22 +381,22 @@ public class RoleServiceTest {
 
     @Test
     public void getUsersByRoleId_fails_ifTheRoleDoesNotExist() {
-        Exception exception = assertThrows(ResourceNotFoundException.class, () -> {
-            roleService.getUsersByRoleId(createRoleEntity().getId(), "default_resource");
-        });
+        Exception exception = assertThrows(ResourceNotFoundException.class, () ->
+            roleService.getUsersByRoleId(createRoleEntity().getId()));
         assertEquals(exception.getMessage(), "There is no role with this id");
     }
 
     @Test
     public void getUsersByRoleId_fails_ifNoUserHasThisRole() {
         RoleEntity role = createRoleEntity();
-
+        String resourceName = "default_resource";
         when(roleRepository.findById(role.getId())).thenReturn(Optional.of(role));
+        ApplicationEntity applicationEntity = new ApplicationEntity();
+        applicationEntity.setName(resourceName);
 
-        Exception exception = assertThrows(BusinessLogicException.class, () -> {
-            roleService.getUsersByRoleId(role.getId(), "default_resource");
-        });
-        assertEquals(exception.getMessage(), "There are no users with this role");
+        Exception exception = assertThrows(BusinessLogicException.class, () ->
+            roleService.getUsersByRoleId(role.getId()));
+        assertEquals("There are no users with this role", exception.getMessage());
     }
 
     // Helpers
@@ -313,7 +406,7 @@ public class RoleServiceTest {
         role.setRoleName("ROLE_TO_TEST");
         role.setDisplayName("Role To Test");
         role.setId(UUID.fromString("af102616-4207-4850-adc4-0bf91058a261"));
-        role.setPermissions(List.of("permissionToTest"));
+        role.setApplications(new ArrayList<>());
         return role;
     }
 
@@ -322,6 +415,14 @@ public class RoleServiceTest {
         role.setRoleName("ROLE_TO_TEST");
         role.setDisplayName("Role To Test");
         role.setId(UUID.fromString("af102616-4207-4850-adc4-0bf91058a261"));
+        return role;
+    }
+
+    private RoleEntity createNumberedRoleEntity(int num) {
+        RoleEntity role = new RoleEntity();
+        role.setRoleName("role" + num);
+        role.setDisplayName("Role " + num);
+        role.setId(UUID.randomUUID());
         return role;
     }
 
@@ -335,7 +436,7 @@ public class RoleServiceTest {
         return role;
     }
 
-    private List<UserRoleEntity> generateUserRoleList() {
+    private List<UserRoleEntity> createUserRoleList() {
         UserEntity user0 = new UserEntity();
         user0.setId(UUID.fromString("ca8cfd1b-8643-4185-ba7f-8c8fbc9a7da6"));
         user0.setEmail("MrIncognito@Illuminati.org");
@@ -344,13 +445,13 @@ public class RoleServiceTest {
         user1.setId(UUID.fromString("ca8cfd1b-1337-4185-ba7f-8c8fbc9a7da6"));
         user1.setEmail("iUseArchBtw@thunderbird.com");
         user1.setDisplayName("It doesn't compile");
-        UserRoleEntity userRoleEntity = generateUserRoleEntity(user0);
-        UserRoleEntity userRoleEntity1 = generateUserRoleEntity(user1);
+        UserRoleEntity userRoleEntity = createUserRoleEntity(user0);
+        UserRoleEntity userRoleEntity1 = createUserRoleEntity(user1);
 
         return List.of(userRoleEntity, userRoleEntity1);
     }
 
-    private UserRoleEntity generateUserRoleEntity(UserEntity user) {
+    private UserRoleEntity createUserRoleEntity(UserEntity user) {
         UserRoleEntity userRoleEntity = new UserRoleEntity();
         userRoleEntity.setUser(user);
         userRoleEntity.setRole(createRoleEntity());
@@ -367,6 +468,7 @@ public class RoleServiceTest {
     private PermissionEntity createPermissionEntity() {
         PermissionEntity entity = new PermissionEntity();
         entity.setName("Test Permission");
+        entity.setDisplayName("Test Permission");
         entity.setId(UUID.randomUUID());
         return entity;
     }
@@ -374,8 +476,26 @@ public class RoleServiceTest {
     private ApplicationEntity createApplicationEntity() {
         ApplicationEntity entity = new ApplicationEntity();
         entity.setName("test_application");
+        entity.setDisplayName("Test Application");
         entity.setId(UUID.randomUUID());
         return entity;
+    }
+
+    private ApplicationEntity createApplicationEntityAndPermissions(int appNumber, int numPermissions) {
+        ApplicationEntity applicationEntity = new ApplicationEntity();
+        applicationEntity.setId(UUID.randomUUID());
+        applicationEntity.setName("app" + appNumber);
+        applicationEntity.setDisplayName("Application " + appNumber);
+        ArrayList<ApplicationPermissionEntity> aps = new ArrayList<>();
+        for (int i = 1; i < numPermissions + 1; i++) {
+            PermissionEntity permissionEntity = new PermissionEntity();
+            permissionEntity.setId(UUID.randomUUID());
+            permissionEntity.setName("app" + appNumber + "permission" + i);
+            permissionEntity.setDisplayName("Application " + appNumber + " Permission " + i);
+            aps.add(createApplicationPermissionEntity(applicationEntity, permissionEntity));
+        }
+        applicationEntity.setPermissions(aps);
+        return applicationEntity;
     }
 
     private ApplicationPermissionEntity createApplicationPermissionEntity(ApplicationEntity application,

@@ -50,7 +50,7 @@ public class RoleApiDelegateImpl implements RoleApiDelegate {
     }
 
     @Override
-    public ResponseEntity<List<UserDTO>> getUsersByRole(UUID id, String resource) {
-        return roleService.getUsersByRoleId(id, resource);
+    public ResponseEntity<List<UserDTO>> getUsersByRole(UUID id) {
+        return roleService.getUsersByRoleId(id);
     }
 }
